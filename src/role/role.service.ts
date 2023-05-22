@@ -19,15 +19,17 @@ export class RoleService {
     }
 
     async getRole(name: string): Promise<Role> {
+
         const role = await this.roleModel.findOne({role: name})
 
         return role
     }
 
     async createRole(dto: createRoleDto): Promise<Role> {
-        const check = await this.getRole(dto.role)
 
-        if(check) {
+        const checkRole = await this.roleModel.findOne({role: dto.role})
+
+        if(checkRole) {
             throw new HttpException('Role service: Role already exist', HttpStatus.BAD_REQUEST)
         }
 
