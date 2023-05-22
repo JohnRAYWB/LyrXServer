@@ -15,24 +15,35 @@ export class UserService {
     ) {}
 
     async getAllUsers(): Promise<User[]> {
+
         const usersList = await this.userModel.find().populate('roles')
 
         return usersList
     }
 
     async getUserById(id: ObjectId): Promise<User> {
+
         const user = await this.userModel.findById(id)
 
         return user
     }
 
     async getUserByName(username: string): Promise<User> {
+
         const user = await this.userModel.findOne({username: username}).populate('roles')
 
         return user
     }
 
+    async getUserByEmail(email: string): Promise<User> {
+
+        const user = await this.userModel.findOne({email: email})
+
+        return user
+    }
+
     async searchUserByName(username: string): Promise<User[]> {
+
         const userList = await this.userModel.find({
             username: {$regex: new RegExp(username, 'i')}
         })
@@ -41,6 +52,7 @@ export class UserService {
     }
 
     async createUser(dto: createUserDto): Promise<User> {
+
         const role = await this.roleService.getRole('user')
         const user = await this.userModel.create({...dto, roles: role})
 
@@ -48,6 +60,7 @@ export class UserService {
     }
 
     async addRole(dto: addRoleDto): Promise<User> {
+
         const user = await this.userModel.findById(dto.userId).populate('roles')
         const findedRole = await this.roleService.getRole(dto.role)
 

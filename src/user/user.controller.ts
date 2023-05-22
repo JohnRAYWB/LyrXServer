@@ -13,11 +13,6 @@ export class UserController {
         return this.userService.getAllUsers()
     }
 
-    @Post()
-    createUser(@Body() dto: createUserDto) {
-        return this.userService.createUser(dto)
-    }
-
     @Post('role')
     addRole(@Body() dto: addRoleDto) {
         return this.userService.addRole(dto)
