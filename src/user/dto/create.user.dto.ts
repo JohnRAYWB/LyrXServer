@@ -10,6 +10,7 @@ export class createUserDto {
     @IsString({message: 'User validation: Must be a string'})
     readonly username: string
 
+    @IsString({message: 'User validation: Must be a string'})
     @Length(4, 16, {message: 'User validation: Length must be from 4 to 16 symbols'})
     readonly password: string
 }
