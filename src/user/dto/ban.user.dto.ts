@@ -1,8 +1,8 @@
 import {ObjectId} from "mongoose";
 
-export class addRoleDto {
+export class banUserDto {
 
     readonly userId: ObjectId
 
-    readonly role: string
+    readonly banReason: string
 }
