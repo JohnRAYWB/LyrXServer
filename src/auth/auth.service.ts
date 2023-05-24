@@ -29,7 +29,7 @@ export class AuthService {
         return this.tokenGenerator(user)
     }
 
-    async signUp(dto: createUserDto) {
+    async signUp(dto: createUserDto): Promise<any> {
 
         const checkEmail = await this.userService.getUserByEmail(dto.email)
         const checkUsername = await this.userService.getUserByName(dto.username)
