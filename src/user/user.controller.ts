@@ -31,7 +31,7 @@ export class UserController {
 
     @Get('profile')
     getProfile(@Request() req) {
-        return req.user
+        return this.userService.getUserByEmail(req.user.email)
     }
 
     @Post('profile/about')

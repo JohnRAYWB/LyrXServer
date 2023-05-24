@@ -15,6 +15,7 @@ import {createTrackDto} from "./dto/create.track.dto";
 import {FileFieldsInterceptor} from "@nestjs/platform-express";
 import {Roles} from "../role/role.guard";
 import {ObjectId} from "mongoose";
+import {createCommentDto} from "./dto/create.comment.dto";
 
 @Controller('tracks')
 export class TrackController {
@@ -45,6 +46,16 @@ export class TrackController {
     createTrack(@UploadedFiles() files, @Request() req, @Body() dto: createTrackDto) {
         const {audio, image} = files
         return this.trackService.createTrack({...dto, artist: req.user}, audio[0], image[0])
+    }
+
+    @Post('listens/:id')
+    incrementListens(@Param('id') id: ObjectId) {
+        return this.trackService.incrementListens(id)
+    }
+
+    @Post('comment')
+    addComment(@Request() req, @Body() dto: createCommentDto) {
+        return this.trackService.addComment({...dto, user: req.user})
     }
 
     @Roles('admin')

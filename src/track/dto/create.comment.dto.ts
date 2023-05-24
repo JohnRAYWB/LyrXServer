@@ -1,7 +1,7 @@
 import {User} from "../../user/schema/user.schema";
 import {ObjectId} from "mongoose";
 
-export class createComment {
+export class createCommentDto {
 
     readonly user: User
 

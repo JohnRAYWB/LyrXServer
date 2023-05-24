@@ -50,7 +50,7 @@ export class AuthService {
 
     private async tokenGenerator(user: User) {
 
-        const payload = {username: user.username, email: user.email, role: user.roles, date: Date.now()}
+        const payload = {id: user['id'], username: user.username, email: user.email, role: user.roles}
 
         return {
             access_token: await this.jwtService.signAsync(payload)

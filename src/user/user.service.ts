@@ -18,32 +18,28 @@ export class UserService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         private roleService: RoleService,
         private fileService: FileService
-    ) {}
+    ) {
+    }
 
     async getAllUsers(): Promise<User[]> {
 
-        const usersList = await this.userModel.find().populate('roles')
+        const usersList = await this.userModel.find()
 
         return usersList
     }
 
-    async getUserById(id: ObjectId): Promise<User> {
-
-        const user = await this.userModel.findById(id)
-
-        return user
-    }
-
     async getUserByName(username: string): Promise<User> {
 
-        const user = await this.userModel.findOne({username: username}).populate('roles')
+        const user = await this.userModel.findOne({username: username})
+            .populate('roles').populate('tracks').populate('comments')
 
         return user
     }
 
     async getUserByEmail(email: string): Promise<User> {
 
-        const user = await this.userModel.findOne({email: email}).populate('roles')
+        const user = await this.userModel.findOne({email: email})
+            .populate('roles').populate('tracks').populate('comments')
 
         return user
     }
@@ -68,7 +64,7 @@ export class UserService {
     async addAbout(dto: aboutDto): Promise<User> {
         const user = await this.userModel.findOne({email: dto.user.email})
 
-        if(user) {
+        if (user) {
             user.about = dto.about
             user.save()
 
@@ -83,7 +79,7 @@ export class UserService {
         const user = await this.userModel.findOne({email: dto.user.email})
         const file = this.fileService.createFile(FileType.IMAGE, dto.avatar, 'profile', user.username)
 
-        if(user.avatar) {
+        if (user.avatar) {
             this.fileService.removeFile(user.avatar, 'profile', user.username)
         }
 
@@ -96,7 +92,7 @@ export class UserService {
     async addBirth(dto: birthDto): Promise<User> {
         const user = await this.userModel.findOne({email: dto.user.email})
 
-        if(user) {
+        if (user) {
             user.birth = dto.birth
             user.save()
 
@@ -116,18 +112,18 @@ export class UserService {
             throw new HttpException('User service: User already has this role', HttpStatus.BAD_REQUEST)
         }
 
-        if(user && foundRole) {
+        if (user && foundRole) {
             user.roles.push(foundRole['id'])
             user.save()
 
-            return user.populate('roles')
+            return user
         }
     }
 
     async banUser(dto: banUserDto): Promise<User> {
         const user = await this.userModel.findById(dto.userId)
 
-        if(user) {
+        if (user) {
             user.ban = true
             user.banReason = dto.banReason
             user.save()
