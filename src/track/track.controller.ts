@@ -1,4 +1,15 @@
-import {Body, Controller, Get, Param, Post, Query, Request, UploadedFiles, UseInterceptors} from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    Post,
+    Query,
+    Request,
+    UploadedFiles,
+    UseInterceptors
+} from "@nestjs/common";
 import {TrackService} from "./track.service";
 import {createTrackDto} from "./dto/create.track.dto";
 import {FileFieldsInterceptor} from "@nestjs/platform-express";
@@ -34,5 +45,11 @@ export class TrackController {
     createTrack(@UploadedFiles() files, @Request() req, @Body() dto: createTrackDto) {
         const {audio, image} = files
         return this.trackService.createTrack({...dto, artist: req.user}, audio[0], image[0])
+    }
+
+    @Roles('admin')
+    @Delete(':id')
+    deleteTrackById(@Param('id') id: ObjectId) {
+        return this.trackService.deleteTrackById(id)
     }
 }

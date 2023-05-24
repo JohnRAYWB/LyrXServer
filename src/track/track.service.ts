@@ -6,6 +6,7 @@ import {Comment, CommentDocument} from "./schema/comment.schema";
 import {FileService, FileType} from "../file/file.service";
 import {UserService} from "../user/user.service";
 import {createTrackDto} from "./dto/create.track.dto";
+import * as path from "path";
 
 @Injectable()
 export class TrackService {
@@ -56,7 +57,10 @@ export class TrackService {
         const track = await this.trackModel.findById(id).populate('artist')
 
         if(track) {
+            this.fileService.removeFile(track.image, 'track', track.artist.username)
+            this.fileService.removeFile(track.audio, 'track', track.artist.username)
 
+            track.deleteOne()
         }
 
         return 'done'
