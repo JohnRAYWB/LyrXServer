@@ -35,7 +35,6 @@ export class AuthGuard implements CanActivate {
 
         try {
             const payload = await this.jwtService.verifyAsync(token, {secret: jwtSecretKey.secret})
-
             request.user = payload
         } catch {
             throw new UnauthorizedException('Auth guard: Something goes wrong. Please try again!')

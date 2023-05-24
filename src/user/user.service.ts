@@ -81,10 +81,10 @@ export class UserService {
 
     async addAvatar(dto: avatarDto): Promise<User> {
         const user = await this.userModel.findOne({email: dto.user.email})
-        const file = this.fileService.createFile(FileType.IMAGE, dto.avatar, 'profile', user.email)
+        const file = this.fileService.createFile(FileType.IMAGE, dto.avatar, 'profile', user.username)
 
         if(user.avatar) {
-            this.fileService.removeFile(user.avatar, 'profile', user.email)
+            this.fileService.removeFile(user.avatar, 'profile', user.username)
         }
 
         user.avatar = file
@@ -110,14 +110,14 @@ export class UserService {
     async addRole(dto: addRoleDto): Promise<User> {
 
         const user = await this.userModel.findById(dto.userId).populate('roles')
-        const findedRole = await this.roleService.getRole(dto.role)
+        const foundRole = await this.roleService.getRole(dto.role)
 
         if (user.roles.find(role => role.role === dto.role)) {
             throw new HttpException('User service: User already has this role', HttpStatus.BAD_REQUEST)
         }
 
-        if(user && findedRole) {
-            user.roles.push(findedRole['id'])
+        if(user && foundRole) {
+            user.roles.push(foundRole['id'])
             user.save()
 
             return user.populate('roles')

@@ -31,10 +31,15 @@ export class AuthService {
 
     async signUp(dto: createUserDto) {
 
-        const candidate = await this.userService.getUserByEmail(dto.email)
+        const checkEmail = await this.userService.getUserByEmail(dto.email)
+        const checkUsername = await this.userService.getUserByName(dto.username)
 
-        if(candidate) {
+        if(checkEmail) {
             throw new HttpException('Auth service: Current email already used', HttpStatus.BAD_REQUEST)
+        }
+
+        if(checkUsername) {
+            throw new HttpException('Auth service: Current username already used', HttpStatus.BAD_REQUEST)
         }
 
         const hash = await bcrypt.hash(dto.password, 10)
