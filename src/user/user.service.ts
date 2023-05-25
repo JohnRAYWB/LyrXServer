@@ -18,8 +18,8 @@ export class UserService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         private roleService: RoleService,
         private fileService: FileService
-    ) {
-    }
+    ) {}
+
 
     async getAllUsers(): Promise<User[]> {
 

@@ -3,7 +3,7 @@ import {
     Controller,
     Delete,
     Get,
-    Param,
+    Param, Patch,
     Post,
     Query,
     Request,
@@ -50,12 +50,22 @@ export class TrackController {
 
     @Post('listens/:id')
     incrementListens(@Param('id') id: ObjectId) {
-        return this.trackService.incrementListens(id)
+        return this.trackService.incrementTrackListens(id)
     }
 
     @Post('comment')
     addComment(@Request() req, @Body() dto: createCommentDto) {
         return this.trackService.addComment({...dto, user: req.user})
+    }
+
+    @Patch('comment/:id')
+    editComment(@Param('id') id: ObjectId, @Body('text') text: string) {
+        return this.trackService.editCommentById(id, text)
+    }
+
+    @Delete('comment/:id')
+    deleteCommentById(@Param('id') id: ObjectId) {
+        return this.trackService.deleteCommentById(id)
     }
 
     @Roles('admin')

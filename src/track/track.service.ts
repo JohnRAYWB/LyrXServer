@@ -55,7 +55,7 @@ export class TrackService {
         return track
     }
 
-    async incrementListens(id: ObjectId): Promise<Track> {
+    async incrementTrackListens(id: ObjectId): Promise<Track> {
 
         const track = await this.trackModel.findById(id)
 
@@ -77,6 +77,33 @@ export class TrackService {
         track.save()
 
         return comment
+    }
+
+    async editCommentById(id: ObjectId, text: string): Promise<Comment> {
+
+        const comment = await this.commentModel.findByIdAndUpdate(id, {text: text})
+
+        comment.save()
+
+        return comment
+    }
+
+    async deleteCommentById(id: ObjectId): Promise<any> {
+
+        const comment = await this.commentModel.findById(id).populate('track').populate('user')
+        const user = await this.userModel.findById(comment.user['id'])
+        const track = await this.trackModel.findById(comment.track['id'])
+
+        if(comment) {
+            user.comments.splice(user.comments.indexOf(comment['id']), 1)
+            user.save()
+            track.comments.splice(track.comments.indexOf(comment['id']), 1)
+            track.save()
+
+            comment.deleteOne()
+        }
+
+        return 'done'
     }
 
     async deleteTrackById(id: ObjectId): Promise<any> {
