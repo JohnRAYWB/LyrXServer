@@ -11,7 +11,7 @@ export enum FileType {
 @Injectable()
 export class FileService {
 
-    createFile(type, file, route, entity: string = '') {
+    createFile(type, file, route, entity?) {
 
         try {
             const fileExtension = file.originalname.split('.').pop()
@@ -30,7 +30,14 @@ export class FileService {
         }
     }
 
-    removeFile(file, route, entity: string = '') {
+    moveFile(file, route, currentEntity, destinationEntity?) {
+        const currentPath = path.resolve(__dirname, '..', 'static', route, currentEntity, file)
+        const destinationPath = path.resolve(__dirname, '..', 'static', route, destinationEntity, file)
+
+        fs.renameSync(currentPath, destinationPath)
+    }
+
+    removeFile(file, route, entity?) {
         const filePath = path.resolve(__dirname, '..', 'static', route, entity, file)
 
         fs.unlinkSync(filePath)

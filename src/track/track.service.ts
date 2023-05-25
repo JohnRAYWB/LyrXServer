@@ -1,4 +1,4 @@
-import {Injectable} from "@nestjs/common";
+import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {Track, TrackDocument} from "./schema/track.schema";
 import {Model, ObjectId} from "mongoose";
@@ -7,6 +7,8 @@ import {FileService, FileType} from "../file/file.service";
 import {createTrackDto} from "./dto/create.track.dto";
 import {createCommentDto} from "./dto/create.comment.dto";
 import {User} from "../user/schema/user.schema";
+import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
+import {editTrackArtistDto} from "./dto/edit.track.artist.dto";
 
 @Injectable()
 export class TrackService {
@@ -79,6 +81,79 @@ export class TrackService {
         return comment
     }
 
+    async editTrackDescription(id: ObjectId, dto: editTrackDescriptionDto): Promise<Track> {
+
+        const track = await this.trackModel.findById(id).populate('artist')
+
+        if(dto.name) {
+            track.name = dto.name
+        }
+
+        if(dto.description) {
+            track.description = dto.description
+        }
+
+        track.save()
+        return track
+    }
+
+    async editTrackArtist(id: ObjectId, dto: editTrackArtistDto): Promise<Track> {
+
+        const track = await this.trackModel.findById(id).populate('artist')
+        let trackOwner = await this.userModel.findById(track.artist['id']).populate('tracks')
+        const user = await this.userModel.findById(dto.artist)
+
+        if(user && user['id'] !== trackOwner['id']) {
+            trackOwner.tracks.splice(trackOwner.tracks.indexOf(track['id']), 1)
+            trackOwner.save()
+
+            track.artist = user['id']
+
+            user.tracks.push(track['id'])
+            user.save()
+
+            this.fileService.moveFile(track.audio, 'track', trackOwner.username, user.username)
+            this.fileService.moveFile(track.image, 'track', trackOwner.username, user.username)
+        }
+
+        track.save()
+        return track
+    }
+
+    async editTrackAudio(id: ObjectId, audio): Promise<Track> {
+
+        const track = await this.trackModel.findById(id).populate('artist')
+
+        if(track) {
+            this.fileService.removeFile(track.audio, 'track', track.artist.username)
+
+            const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', track.artist.username)
+            track.audio = audioFile
+
+            track.save()
+            return track
+        } else {
+            throw new HttpException('Something goes wrong. Try again', HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    async editTrackImage(id: ObjectId, image): Promise<Track> {
+
+        const track = await this.trackModel.findById(id).populate('artist')
+
+        if(track) {
+            this.fileService.removeFile(track.image, 'track', track.artist.username)
+
+            const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', track.artist.username)
+            track.image = imageFile
+
+            track.save()
+            return track
+        } else {
+            throw new HttpException('Something goes wrong. Try again', HttpStatus.BAD_REQUEST)
+        }
+    }
+
     async editCommentById(id: ObjectId, text: string): Promise<Comment> {
 
         const comment = await this.commentModel.findByIdAndUpdate(id, {text: text})
@@ -112,8 +187,8 @@ export class TrackService {
         const user = await this.userModel.findOne({email: track.artist.email}).populate('tracks')
 
         if(track) {
-            this.fileService.removeFile(track.image, 'track', track.artist.username)
             this.fileService.removeFile(track.audio, 'track', track.artist.username)
+            this.fileService.removeFile(track.image, 'track', track.artist.username)
 
             user.tracks.splice(user.tracks.indexOf(track['id']), 1)
             user.save()

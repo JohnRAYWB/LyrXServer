@@ -6,16 +6,18 @@ import {
     Param, Patch,
     Post,
     Query,
-    Request,
+    Request, UploadedFile,
     UploadedFiles,
     UseInterceptors
 } from "@nestjs/common";
 import {TrackService} from "./track.service";
 import {createTrackDto} from "./dto/create.track.dto";
-import {FileFieldsInterceptor} from "@nestjs/platform-express";
+import {FileFieldsInterceptor, FileInterceptor} from "@nestjs/platform-express";
 import {Roles} from "../role/role.guard";
 import {ObjectId} from "mongoose";
 import {createCommentDto} from "./dto/create.comment.dto";
+import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
+import {editTrackArtistDto} from "./dto/edit.track.artist.dto";
 
 @Controller('tracks')
 export class TrackController {
@@ -58,8 +60,34 @@ export class TrackController {
         return this.trackService.addComment({...dto, user: req.user})
     }
 
+    @Roles('admin', 'artist')
+    @Patch(':id/description')
+    editTrackDescription(@Param('id') id: ObjectId, @Body() dto: editTrackDescriptionDto) {
+        return this.trackService.editTrackDescription(id, dto)
+    }
+
+    @Roles('admin')
+    @Patch(':id/artist')
+    editTrackArtist(@Param('id') id: ObjectId, @Body() dto: editTrackArtistDto) {
+        return this.trackService.editTrackArtist(id, dto)
+    }
+
+    @Roles('admin', 'artist')
+    @Patch(':id/audio')
+    @UseInterceptors(FileInterceptor('audio'))
+    editTrackAudio(@Param('id') id: ObjectId, @UploadedFile() audio) {
+        return this.trackService.editTrackAudio(id, audio)
+    }
+
+    @Roles('admin', 'artist')
+    @Patch(':id/image')
+    @UseInterceptors(FileInterceptor('image'))
+    editTrackImage(@Param('id') id: ObjectId, @UploadedFile() image) {
+        return this.trackService.editTrackImage(id, image)
+    }
+
     @Patch('comment/:id')
-    editComment(@Param('id') id: ObjectId, @Body('text') text: string) {
+    editCommentById(@Param('id') id: ObjectId, @Body('text') text: string) {
         return this.trackService.editCommentById(id, text)
     }
 
