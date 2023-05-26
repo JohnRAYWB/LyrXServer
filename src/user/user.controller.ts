@@ -34,6 +34,11 @@ export class UserController {
         return this.userService.getUserByEmail(req.user.email)
     }
 
+    @Post('profile/collection')
+    getOwnCollection(@Request() req) {
+        return this.userService.getOwnCollection(req.user)
+    }
+
     @Post('profile/about')
     addAbout(@Request() req, @Body() dto: aboutDto) {
         return this.userService.addAbout({...dto, user: req.user})

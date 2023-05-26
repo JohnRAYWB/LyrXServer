@@ -67,18 +67,51 @@ export class TrackService {
         return track
     }
 
+    async addTrackToCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
+
+        const track = await this.trackModel.findById(tId)
+        const user = await this.userModel.findById(uId)
+
+        if(track && user) {
+            user.tracks.push(track['id'])
+            user.save()
+
+            return 'done'
+        } else {
+            throw new HttpException('Something goes wrong. Please try again', HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    async removeTrackFromCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
+        const track = await this.trackModel.findById(tId)
+        const user = await this.userModel.findById(uId)
+
+        if(track && user) {
+            user.tracks.splice(user.tracks.indexOf(track['id']), 1)
+            user.save()
+
+            return 'done'
+        } else {
+            throw new HttpException('Something goes wrong. Please try again', HttpStatus.BAD_REQUEST)
+        }
+    }
+
     async addComment(dto: createCommentDto): Promise<Comment> {
 
         const user = await this.userModel.findOne({email: dto.user.email})
         const track = await this.trackModel.findById(dto.track)
-        const comment = await this.commentModel.create({...dto, user: user['id']})
 
-        user.comments.push(comment['id'])
-        user.save()
-        track.comments.push(comment['id'])
-        track.save()
+        if(!user.ban) {
+            const comment = await this.commentModel.create({...dto, user: user['id']})
+            user.comments.push(comment['id'])
+            user.save()
+            track.comments.push(comment['id'])
+            track.save()
 
-        return comment
+            return comment
+        } else {
+            throw new HttpException(`You are banned. Ban reason: ${user.banReason}`, HttpStatus.BAD_REQUEST)
+        }
     }
 
     async editTrackDescription(id: ObjectId, dto: editTrackDescriptionDto): Promise<Track> {

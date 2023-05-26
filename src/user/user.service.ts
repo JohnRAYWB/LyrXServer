@@ -10,6 +10,7 @@ import {aboutDto} from "./dto/about.dto";
 import {birthDto} from "./dto/birth.dto";
 import {avatarDto} from "./dto/avatar.dto";
 import {FileService, FileType} from "../file/file.service";
+import {Track} from "../track/schema/track.schema";
 
 @Injectable()
 export class UserService {
@@ -59,6 +60,12 @@ export class UserService {
         const user = await this.userModel.create({...dto, roles: role})
 
         return user.populate('roles')
+    }
+
+    async getOwnCollection(userId: User): Promise<Track[]> {
+        const user = await this.userModel.findById(userId['id']).populate('tracks')
+
+        return user.tracks
     }
 
     async addAbout(dto: aboutDto): Promise<User> {

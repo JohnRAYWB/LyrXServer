@@ -55,6 +55,16 @@ export class TrackController {
         return this.trackService.incrementTrackListens(id)
     }
 
+    @Post('add/:id')
+    addTrackToCollection(@Param('id') id: ObjectId, @Request() req) {
+        return this.trackService.addTrackToCollection(id, req.user['id'])
+    }
+
+    @Post('remove/:id')
+    removeTrackToCollection(@Param('id') id: ObjectId, @Request() req) {
+        return this.trackService.removeTrackFromCollection(id, req.user['id'])
+    }
+
     @Post('comment')
     addComment(@Request() req, @Body() dto: createCommentDto) {
         return this.trackService.addComment({...dto, user: req.user})
