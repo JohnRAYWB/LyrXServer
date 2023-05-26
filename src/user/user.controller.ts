@@ -7,6 +7,7 @@ import {aboutDto} from "./dto/about.dto";
 import {birthDto} from "./dto/birth.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {avatarDto} from "./dto/avatar.dto";
+import {ObjectId} from "mongoose";
 
 @Controller('users')
 export class UserController {
@@ -37,6 +38,11 @@ export class UserController {
     @Post('profile/collection')
     getOwnCollection(@Request() req) {
         return this.userService.getOwnCollection(req.user)
+    }
+
+    @Post('profile/collection/:id')
+    removeTrackFromCollection(@Param('id') id: ObjectId, @Request() req) {
+        return this.userService.removeTrackFromCollection(id, req.user['id'])
     }
 
     @Post('profile/about')

@@ -7,6 +7,7 @@ import {ServeStaticModule} from "@nestjs/serve-static";
 import {TrackModule} from "./track/track.module";
 import {FileModule} from "./file/file.module";
 import * as path from "path";
+import {PlaylistModule} from "./playlist/playlist.module";
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import * as path from "path";
       RoleModule,
       AuthModule,
       TrackModule,
+      PlaylistModule,
       FileModule
   ],
   controllers: [],

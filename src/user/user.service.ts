@@ -11,6 +11,7 @@ import {birthDto} from "./dto/birth.dto";
 import {avatarDto} from "./dto/avatar.dto";
 import {FileService, FileType} from "../file/file.service";
 import {Track} from "../track/schema/track.schema";
+import {TrackService} from "../track/track.service";
 
 @Injectable()
 export class UserService {
@@ -18,7 +19,8 @@ export class UserService {
     constructor(
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         private roleService: RoleService,
-        private fileService: FileService
+        private fileService: FileService,
+        private trackService: TrackService
     ) {}
 
 
@@ -32,7 +34,7 @@ export class UserService {
     async getUserByName(username: string): Promise<User> {
 
         const user = await this.userModel.findOne({username: username})
-            .populate('roles').populate('tracks').populate('comments')
+            .populate('roles').populate('tracksCollection').populate('comments')
 
         return user
     }
@@ -40,7 +42,7 @@ export class UserService {
     async getUserByEmail(email: string): Promise<User> {
 
         const user = await this.userModel.findOne({email: email})
-            .populate('roles').populate('tracks').populate('comments')
+            .populate('roles').populate('tracksCollection').populate('comments')
 
         return user
     }
@@ -63,9 +65,13 @@ export class UserService {
     }
 
     async getOwnCollection(userId: User): Promise<Track[]> {
-        const user = await this.userModel.findById(userId['id']).populate('tracks')
+        const user = await this.userModel.findById(userId['id']).populate('tracksCollection')
 
-        return user.tracks
+        return user.tracksCollection
+    }
+
+    async removeTrackFromCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
+        return this.trackService.removeTrackFromCollection(tId, uId)
     }
 
     async addAbout(dto: aboutDto): Promise<User> {

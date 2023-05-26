@@ -42,6 +42,9 @@ export class User {
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Track'}]})
     tracks: Track[]
+
+    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Track'}]})
+    tracksCollection: Track[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

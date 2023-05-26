@@ -55,6 +55,11 @@ export class TrackController {
         return this.trackService.incrementTrackListens(id)
     }
 
+    @Post('likes/:id')
+    incrementLikes(@Param('id') id: ObjectId) {
+        return this.trackService.incrementTrackLikes(id)
+    }
+
     @Post('add/:id')
     addTrackToCollection(@Param('id') id: ObjectId, @Request() req) {
         return this.trackService.addTrackToCollection(id, req.user['id'])

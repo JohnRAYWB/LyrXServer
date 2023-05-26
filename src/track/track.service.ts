@@ -22,7 +22,7 @@ export class TrackService {
 
     async getAllTracks(): Promise<Track[]> {
 
-        const tracksList = await this.trackModel.find().populate('comments')
+        const tracksList = await this.trackModel.find()
 
         return tracksList
     }
@@ -49,7 +49,7 @@ export class TrackService {
         const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
         const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
 
-        const track = await this.trackModel.create({...dto, artist: user['id'], listens: 0, audio: audioFile, image: imageFile})
+        const track = await this.trackModel.create({...dto, artist: user['id'], listens: 0, likes: 0, audio: audioFile, image: imageFile})
 
         user.tracks.push(track['id'])
         user.save()
@@ -67,13 +67,23 @@ export class TrackService {
         return track
     }
 
+    async incrementTrackLikes(id: ObjectId): Promise<Track> {
+
+        const track = await this.trackModel.findById(id)
+
+        track.likes++
+        await track.save()
+
+        return track
+    }
+
     async addTrackToCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(tId)
         const user = await this.userModel.findById(uId)
 
         if(track && user) {
-            user.tracks.push(track['id'])
+            user.tracksCollection.push(track['id'])
             user.save()
 
             return 'done'
@@ -87,7 +97,7 @@ export class TrackService {
         const user = await this.userModel.findById(uId)
 
         if(track && user) {
-            user.tracks.splice(user.tracks.indexOf(track['id']), 1)
+            user.tracksCollection.splice(user.tracksCollection.indexOf(track['id']), 1)
             user.save()
 
             return 'done'

@@ -17,6 +17,7 @@ import {User, UserSchema} from "../user/schema/user.schema";
     providers: [
         TrackService,
         FileService
-    ]
+    ],
+    exports: [TrackService]
 })
 export class TrackModule {}
