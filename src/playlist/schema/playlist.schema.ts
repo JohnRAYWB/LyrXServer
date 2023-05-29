@@ -16,7 +16,7 @@ export class Playlist {
     image: string
 
     @Prop()
-    likes: number
+    favorites: number
 
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
     user: User

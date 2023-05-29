@@ -23,7 +23,7 @@ export class Track {
     listens: number
 
     @Prop()
-    likes: number
+    favorites: number
 
     @Prop()
     audio: string

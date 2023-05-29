@@ -42,11 +42,6 @@ export class PlaylistController {
         return this.playlistService.createPlaylist(req.user['id'], name, image)
     }
 
-    @Post('likes/:id')
-    incrementPlaylistsLikes(@Param('id') id: ObjectId) {
-        return this.playlistService.incrementPlaylistsLikes(id)
-    }
-
     @Delete(':id')
     deletePlaylist(@Param('id') id: ObjectId, @Request() req) {
         return this.playlistService.deletePlaylist(id, req.user['id'])

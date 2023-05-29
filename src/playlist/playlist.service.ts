@@ -46,16 +46,6 @@ export class PlaylistService {
         return playlist
     }
 
-    async incrementPlaylistsLikes(id: ObjectId): Promise<Playlist> {
-
-        const playlist = await this.playlistModel.findById(id)
-
-        playlist.likes++
-        await playlist.save()
-
-        return playlist
-    }
-
     async deletePlaylist(pId: ObjectId, uId: ObjectId): Promise<any> {
 
         const user = await this.userModel.findById(uId).populate('roles')

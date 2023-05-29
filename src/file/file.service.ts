@@ -30,9 +30,15 @@ export class FileService {
         }
     }
 
-    moveFile(file, route, currentEntity, destinationEntity?) {
+    moveFile(file, type, route, currentEntity, destinationEntity?) {
+
+        const destination = path.resolve(__dirname, '..', 'static', route, destinationEntity, type)
         const currentPath = path.resolve(__dirname, '..', 'static', route, currentEntity, file)
         const destinationPath = path.resolve(__dirname, '..', 'static', route, destinationEntity, file)
+
+        if(!fs.existsSync(destination)) {
+            fs.mkdirSync(destination)
+        }
 
         fs.renameSync(currentPath, destinationPath)
     }

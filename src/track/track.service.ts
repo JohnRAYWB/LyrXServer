@@ -49,7 +49,7 @@ export class TrackService {
         const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
         const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
 
-        const track = await this.trackModel.create({...dto, artist: user['id'], listens: 0, likes: 0, audio: audioFile, image: imageFile})
+        const track = await this.trackModel.create({...dto, artist: user['id'], listens: 0, favorites: 0, audio: audioFile, image: imageFile})
 
         user.tracks.push(track['id'])
         user.save()
@@ -67,16 +67,6 @@ export class TrackService {
         return track
     }
 
-    async incrementTrackLikes(id: ObjectId): Promise<Track> {
-
-        const track = await this.trackModel.findById(id)
-
-        track.likes++
-        await track.save()
-
-        return track
-    }
-
     async addTrackToCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(tId)
@@ -85,6 +75,9 @@ export class TrackService {
         if(track && user) {
             user.tracksCollection.push(track['id'])
             user.save()
+
+            track.favorites++
+            track.save()
 
             return 'done'
         } else {
@@ -99,6 +92,9 @@ export class TrackService {
         if(track && user) {
             user.tracksCollection.splice(user.tracksCollection.indexOf(track['id']), 1)
             user.save()
+
+            track.favorites--
+            track.save()
 
             return 'done'
         } else {
@@ -155,8 +151,8 @@ export class TrackService {
             user.tracks.push(track['id'])
             user.save()
 
-            this.fileService.moveFile(track.audio, 'track', trackOwner.username, user.username)
-            this.fileService.moveFile(track.image, 'track', trackOwner.username, user.username)
+            this.fileService.moveFile(track.audio,'audio', 'track', trackOwner.username, user.username)
+            this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, user.username)
         }
 
         track.save()
@@ -227,16 +223,45 @@ export class TrackService {
     async deleteTrackById(id: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(id).populate('artist')
-        const user = await this.userModel.findOne({email: track.artist.email}).populate('tracks')
+        const users = await this.userModel.find().populate('tracksCollection').populate('tracks')
+        const comments = await this.commentModel.find()
 
         if(track) {
+            users.map(user => {
+
+                user.tracks.map(tr => {
+                    if(track['id'] === tr['id']) {
+                        user.tracks.splice(user.tracks.indexOf(tr['id']), 1)
+                    }
+                })
+
+                user.tracksCollection.map(tr => {
+                    if(tr['id'] === track['id']) {
+                        user.tracksCollection.splice(user.tracksCollection.indexOf(tr['id']), 1)
+                    }
+                })
+
+                user.comments.map(co => {
+                    if(track.comments.includes(co)) {
+                        user.comments.splice(user.comments.indexOf(co), 1)
+                    }
+                })
+
+                user.save()
+            })
+
+            comments.map(co => {
+                if(track.comments.includes(co['id'])) {
+                    co.deleteOne()
+                }
+            })
+
             this.fileService.removeFile(track.audio, 'track', track.artist.username)
             this.fileService.removeFile(track.image, 'track', track.artist.username)
 
-            user.tracks.splice(user.tracks.indexOf(track['id']), 1)
-            user.save()
-
             track.deleteOne()
+        } else {
+            throw new HttpException('Track not found', HttpStatus.NOT_FOUND)
         }
 
         return 'done'
