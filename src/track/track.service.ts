@@ -120,20 +120,24 @@ export class TrackService {
         }
     }
 
-    async editTrackDescription(id: ObjectId, dto: editTrackDescriptionDto): Promise<Track> {
+    async editTrackDescription(id: ObjectId, dto: editTrackDescriptionDto, userId: ObjectId): Promise<Track> {
 
         const track = await this.trackModel.findById(id).populate('artist')
 
-        if(dto.name) {
-            track.name = dto.name
-        }
+        if(track && track.artist['id'] === userId) {
+            if(dto.name) {
+                track.name = dto.name
+            }
 
-        if(dto.description) {
-            track.description = dto.description
-        }
+            if(dto.description) {
+                track.description = dto.description
+            }
 
-        track.save()
-        return track
+            track.save()
+            return track
+        } else {
+            throw new HttpException('Something goes wrong. Try again', HttpStatus.BAD_REQUEST)
+        }
     }
 
     async editTrackArtist(id: ObjectId, dto: editTrackArtistDto): Promise<Track> {
@@ -159,14 +163,12 @@ export class TrackService {
         return track
     }
 
-    async editTrackAudio(id: ObjectId, audio): Promise<Track> {
+    async editTrackAudio(id: ObjectId, audio, userId: ObjectId): Promise<Track> {
 
         const track = await this.trackModel.findById(id).populate('artist')
 
-        if(track) {
-            this.fileService.removeFile(track.audio, 'track', track.artist.username)
-
-            const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', track.artist.username)
+        if(track && track.artist['id'] === userId) {
+            const audioFile = this.fileService.updateFile(track.audio, audio, FileType.AUDIO, 'track', track.artist.username)
             track.audio = audioFile
 
             track.save()
@@ -176,14 +178,12 @@ export class TrackService {
         }
     }
 
-    async editTrackImage(id: ObjectId, image): Promise<Track> {
+    async editTrackImage(id: ObjectId, image, userId: ObjectId): Promise<Track> {
 
         const track = await this.trackModel.findById(id).populate('artist')
 
-        if(track) {
-            this.fileService.removeFile(track.image, 'track', track.artist.username)
-
-            const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', track.artist.username)
+        if(track && track.artist['id'] === userId) {
+            const imageFile = this.fileService.updateFile(track.image, image, FileType.IMAGE, 'track', track.artist.username)
             track.image = imageFile
 
             track.save()

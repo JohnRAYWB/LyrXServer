@@ -70,10 +70,10 @@ export class TrackController {
         return this.trackService.addComment({...dto, user: req.user})
     }
 
-    @Roles('admin', 'artist')
+    @Roles('artist')
     @Patch(':id/description')
-    editTrackDescription(@Param('id') id: ObjectId, @Body() dto: editTrackDescriptionDto) {
-        return this.trackService.editTrackDescription(id, dto)
+    editTrackDescription(@Request() req, @Param('id') id: ObjectId, @Body() dto: editTrackDescriptionDto) {
+        return this.trackService.editTrackDescription(id, dto, req.user['id'])
     }
 
     @Roles('admin')
@@ -82,18 +82,18 @@ export class TrackController {
         return this.trackService.editTrackArtist(id, dto)
     }
 
-    @Roles('admin', 'artist')
+    @Roles('artist')
     @Patch(':id/audio')
     @UseInterceptors(FileInterceptor('audio'))
-    editTrackAudio(@Param('id') id: ObjectId, @UploadedFile() audio) {
-        return this.trackService.editTrackAudio(id, audio)
+    editTrackAudio(@Request() req, @Param('id') id: ObjectId, @UploadedFile() audio) {
+        return this.trackService.editTrackAudio(id, audio, req.user['id'])
     }
 
-    @Roles('admin', 'artist')
+    @Roles('artist')
     @Patch(':id/image')
     @UseInterceptors(FileInterceptor('image'))
-    editTrackImage(@Param('id') id: ObjectId, @UploadedFile() image) {
-        return this.trackService.editTrackImage(id, image)
+    editTrackImage(@Request() req, @Param('id') id: ObjectId, @UploadedFile() image) {
+        return this.trackService.editTrackImage(id, image, req.user['id'])
     }
 
     @Patch('comment/:id')

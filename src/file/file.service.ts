@@ -43,6 +43,18 @@ export class FileService {
         fs.renameSync(currentPath, destinationPath)
     }
 
+    updateFile(oldFile, newFile, type, route, entity?) {
+
+        try{
+            this.removeFile(oldFile, route, entity)
+            const file = this.createFile(type, newFile, route, entity)
+
+            return file
+        } catch {
+            throw new HttpException('File sys: Something goes wrong, try again!', HttpStatus.BAD_REQUEST)
+        }
+    }
+
     removeFile(file, route, entity?) {
         const filePath = path.resolve(__dirname, '..', 'static', route, entity, file)
 
