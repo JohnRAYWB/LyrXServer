@@ -4,6 +4,7 @@ import * as mongoose from "mongoose";
 import {Role} from "../../role/schema/role.schema";
 import {Comment} from "../../track/schema/comment.schema";
 import {Track} from "../../track/schema/track.schema";
+import {Playlist} from "../../playlist/schema/playlist.schema";
 
 export type UserDocument = HydratedDocument<User>
 
@@ -45,6 +46,9 @@ export class User {
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Track'}]})
     tracksCollection: Track[]
+
+    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Playlist'}]})
+    playlistsCollection: Playlist[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

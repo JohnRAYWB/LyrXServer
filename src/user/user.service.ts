@@ -12,6 +12,8 @@ import {avatarDto} from "./dto/avatar.dto";
 import {FileService, FileType} from "../file/file.service";
 import {Track} from "../track/schema/track.schema";
 import {TrackService} from "../track/track.service";
+import {PlaylistService} from "../playlist/playlist.service";
+import {Playlist} from "../playlist/schema/playlist.schema";
 
 @Injectable()
 export class UserService {
@@ -20,7 +22,8 @@ export class UserService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         private roleService: RoleService,
         private fileService: FileService,
-        private trackService: TrackService
+        private trackService: TrackService,
+        private playlistService: PlaylistService
     ) {}
 
 
@@ -64,15 +67,19 @@ export class UserService {
         return user.populate('roles')
     }
 
-    async getOwnCollection(userId: User): Promise<Track[]> {
-        const user = await this.userModel.findById(userId['id']).populate('tracksCollection')
+    async getOwnCollection(uId: ObjectId): Promise<Track[]> {
+        const user = await this.userModel.findById(uId).populate('tracksCollection')
 
         return user.tracksCollection
     }
 
-    async removeTrackFromCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
-        return this.trackService.removeTrackFromCollection(tId, uId)
+    async getOwnPlaylists(uId: ObjectId): Promise<Playlist[]> {
+        const user = await this.userModel.findById(uId).populate('playlistsCollection')
+
+        return user.playlistsCollection
     }
+
+
 
     async addAbout(dto: aboutDto): Promise<User> {
         const user = await this.userModel.findOne({email: dto.user.email})
@@ -145,5 +152,13 @@ export class UserService {
         } else {
             throw new HttpException('User service: User not found', HttpStatus.BAD_REQUEST)
         }
+    }
+
+    async removeTrackFromCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
+        return this.trackService.removeTrackFromCollection(tId, uId)
+    }
+
+    async removePlaylistFromCollection(pId: ObjectId, uId: ObjectId): Promise<any> {
+        return this.playlistService.removePlaylistFromCollection(pId, uId)
     }
 }

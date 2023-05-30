@@ -5,7 +5,7 @@ import {
     Get,
     Param,
     Post,
-    Query,
+    Query, Req,
     Request,
     UploadedFile,
     UseInterceptors
@@ -13,6 +13,7 @@ import {
 import {PlaylistService} from "./playlist.service";
 import {ObjectId} from "mongoose";
 import {FileInterceptor} from "@nestjs/platform-express";
+import {addTrackToPlaylistDto} from "./dto/add.track.to.playlist.dto";
 
 @Controller('playlists')
 export class PlaylistController {
@@ -40,6 +41,26 @@ export class PlaylistController {
     @UseInterceptors(FileInterceptor('image'))
     createPlaylist(@Request() req, @UploadedFile() image, @Body('name') name: string) {
         return this.playlistService.createPlaylist(req.user['id'], name, image)
+    }
+
+    @Post('add_track')
+    addTrackToPlaylist(@Request() req, @Body() dto: addTrackToPlaylistDto) {
+        return this.playlistService.addTrackToPlaylist({...dto, user: req.user['id']})
+    }
+
+    @Post('remove_track')
+    removeTrackFromPlaylist(@Request() req, @Body() dto: addTrackToPlaylistDto) {
+        return this.playlistService.removeTrackFromPlaylist({...dto, user: req.user['id']})
+    }
+
+    @Post('add_playlist/:id')
+    addPlaylistToCollection(@Request() req, @Param('id') id: ObjectId) {
+        return this.playlistService.addPlaylistToCollection(id, req.user['id'])
+    }
+
+    @Post('remove_playlist/:id')
+    removePlaylistFromCollection(@Request() req, @Param('id') id: ObjectId) {
+        return this.playlistService.removePlaylistFromCollection(id, req.user['id'])
     }
 
     @Delete(':id')

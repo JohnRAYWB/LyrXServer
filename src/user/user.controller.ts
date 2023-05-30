@@ -37,12 +37,22 @@ export class UserController {
 
     @Post('profile/collection')
     getOwnCollection(@Request() req) {
-        return this.userService.getOwnCollection(req.user)
+        return this.userService.getOwnCollection(req.user['id'])
+    }
+
+    @Post('profile/playlists')
+    getOwnPlaylists(@Request() req) {
+        return this.userService.getOwnPlaylists(req.user['id'])
     }
 
     @Post('profile/collection/:id')
-    removeTrackFromCollection(@Param('id') id: ObjectId, @Request() req) {
+    removeTrackFromCollection(@Request() req, @Param('id') id: ObjectId) {
         return this.userService.removeTrackFromCollection(id, req.user['id'])
+    }
+
+    @Post('profile/playlists/:id')
+    removePlaylistFromCollection(@Request() req, @Param('id') id: ObjectId) {
+        return this.userService.removePlaylistFromCollection(id, req.user['id'])
     }
 
     @Post('profile/about')
@@ -52,7 +62,7 @@ export class UserController {
 
     @Post('profile/avatar')
     @UseInterceptors(FileInterceptor('avatar'))
-    addAvatar(@UploadedFile() file, @Request() req, @Body() dto: avatarDto) {
+    addAvatar(@Request() req,@UploadedFile() file, @Body() dto: avatarDto) {
         return this.userService.addAvatar({user: req.user, avatar: file})
     }
 
