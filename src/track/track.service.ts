@@ -6,9 +6,10 @@ import {Comment, CommentDocument} from "./schema/comment.schema";
 import {FileService, FileType} from "../file/file.service";
 import {createTrackDto} from "./dto/create.track.dto";
 import {createCommentDto} from "./dto/create.comment.dto";
-import {User} from "../user/schema/user.schema";
+import {User, UserDocument} from "../user/schema/user.schema";
 import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
 import {editTrackArtistDto} from "./dto/edit.track.artist.dto";
+import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
 
 @Injectable()
 export class TrackService {
@@ -16,7 +17,8 @@ export class TrackService {
     constructor(
        @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
        @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-       @InjectModel(User.name) private userModel: Model<User>,
+       @InjectModel(User.name) private userModel: Model<UserDocument>,
+       @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
        private fileService: FileService,
     ) {}
 
@@ -223,6 +225,7 @@ export class TrackService {
     async deleteTrackById(id: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(id).populate('artist')
+        const playlists = await this.playlistModel.find()
         const users = await this.userModel.find().populate('tracksCollection').populate('tracks')
         const comments = await this.commentModel.find()
 
@@ -248,6 +251,14 @@ export class TrackService {
                 })
 
                 user.save()
+            })
+
+            playlists.map(playlist => {
+                if(playlist.tracks.includes(track['id'])) {
+                    playlist.tracks.splice(playlist.tracks.indexOf(track['id']), 1)
+
+                    playlist.save()
+                }
             })
 
             comments.map(co => {
