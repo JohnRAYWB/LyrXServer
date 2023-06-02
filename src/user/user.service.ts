@@ -37,7 +37,7 @@ export class UserService {
     async getUserByName(username: string): Promise<User> {
 
         const user = await this.userModel.findOne({username: username})
-            .populate('roles').populate('tracksCollection').populate('comments')
+            .populate(['roles', 'tracksCollection', 'comments'])
 
         return user
     }
@@ -45,7 +45,7 @@ export class UserService {
     async getUserByEmail(email: string): Promise<User> {
 
         const user = await this.userModel.findOne({email: email})
-            .populate('roles').populate('tracksCollection').populate('comments')
+            .populate(['roles', 'tracksCollection', 'comments'])
 
         return user
     }
@@ -54,7 +54,7 @@ export class UserService {
 
         const userList = await this.userModel.find({
             username: {$regex: new RegExp(username, 'i')}
-        }).populate('roles')
+        }).populate(['roles', 'tracksCollection', 'comments'])
 
         return userList
     }

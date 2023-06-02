@@ -102,8 +102,8 @@ export class TrackController {
     }
 
     @Delete('comment/:id')
-    deleteCommentById(@Param('id') id: ObjectId) {
-        return this.trackService.deleteCommentById(id)
+    deleteCommentById(@Request() req, @Param('id') id: ObjectId) {
+        return this.trackService.deleteCommentById(id, req.user['id'])
     }
 
     @Roles('admin')

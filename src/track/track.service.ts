@@ -204,22 +204,25 @@ export class TrackService {
         return comment
     }
 
-    async deleteCommentById(id: ObjectId): Promise<any> {
+    async deleteCommentById(id: ObjectId, uId: ObjectId): Promise<any> {
 
-        const comment = await this.commentModel.findById(id).populate('track').populate('user')
-        const user = await this.userModel.findById(comment.user['id'])
-        const track = await this.trackModel.findById(comment.track['id'])
+        const comment = await this.commentModel.findById(id).populate(['user', 'track'])
+        const user = await this.userModel.findById(uId).populate('roles')
 
-        if(comment) {
-            user.comments.splice(user.comments.indexOf(comment['id']), 1)
-            user.save()
-            track.comments.splice(track.comments.indexOf(comment['id']), 1)
-            track.save()
+        try {
+            if(user['id'] === comment.user['id'] || user.roles.find(role => role.role === 'admin')) {
+                await this.userModel.findByIdAndUpdate(comment.user['id'], {$pull: {comments: comment['id']}})
+                await this.trackModel.findByIdAndUpdate(comment.track['id'],{$pull: {comments: comment['id']}})
 
-            comment.deleteOne()
+                comment.deleteOne()
+
+                return 'Comment successfully deleted'
+            } else {
+                throw new HttpException(`Not your comment`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Comment not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
-
-        return 'done'
     }
 
     async deleteTrackById(id: ObjectId): Promise<any> {
@@ -227,13 +230,12 @@ export class TrackService {
         const track = await this.trackModel.findById(id).populate('artist')
 
         try {
-
             await this.userModel.find().populate('comments').updateMany({}, {$pullAll: {
                     comments: [...track.comments],
                     tracks: [track],
                     tracksCollection: [track]
                 }})
-            await this.playlistModel.updateMany({}, {$pullAll: {tracks: [track]}})
+            await this.playlistModel.find().updateMany({}, {$pullAll: {tracks: [track]}})
             await this.commentModel.deleteMany({track: track})
 
             this.fileService.removeFile(track.audio, 'track', track.artist.username)
