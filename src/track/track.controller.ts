@@ -47,7 +47,7 @@ export class TrackController {
     ]))
     createTrack(@UploadedFiles() files, @Request() req, @Body() dto: createTrackDto) {
         const {audio, image} = files
-        return this.trackService.createTrack({...dto, artist: req.user}, audio[0], image[0])
+        return this.trackService.createTrack(dto, audio[0], image[0], req.user['id'])
     }
 
     @Post('listens/:id')

@@ -5,7 +5,6 @@ import {Model, ObjectId} from "mongoose";
 import {FileService, FileType} from "../file/file.service";
 import {User, UserDocument} from "../user/schema/user.schema";
 import {addTrackToPlaylistDto} from "./dto/add.track.to.playlist.dto";
-import {TrackService} from "../track/track.service";
 import {Track, TrackDocument} from "../track/schema/track.schema";
 
 @Injectable()
@@ -15,7 +14,6 @@ export class PlaylistService {
         @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
         @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
         @InjectModel(User.name) private userModel: Model<UserDocument>,
-        private trackService: TrackService,
         private fileService: FileService
     ) {
     }
@@ -51,6 +49,31 @@ export class PlaylistService {
 
         user.playlistsCollection.push(playlist['id'])
         user.save()
+
+        return playlist
+    }
+
+    async dropAlbum(name, audio, image, uId, trackName): Promise<Playlist> {
+
+        const user = await this.userModel.findById(uId)
+        const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'album', user.username)
+        const playlist = await this.playlistModel.create({name: name, user: user['id'], favorites: 0, image: imagePath})
+
+        const audioPath = audio.map(audio => this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username))
+
+        for(let i = 0; i < audioPath.length; i++) {
+            if(i === audioPath.length - 1) {
+                user.albums.push(playlist['id'])
+            }
+
+            const track = await this.trackModel.create({name: trackName[i], artist: user['id'], listens: 0, favorites: 0, audio: audioPath[i], image: playlist.image})
+
+            playlist.tracks.push(track['id'])
+            user.tracks.push(track['id'])
+
+            await playlist.save()
+            user.save()
+        }
 
         return playlist
     }

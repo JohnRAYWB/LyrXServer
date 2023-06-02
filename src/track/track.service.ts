@@ -45,9 +45,9 @@ export class TrackService {
         return track
     }
 
-    async createTrack(dto: createTrackDto, audio, image): Promise<Track> {
+    async createTrack(dto: createTrackDto, audio, image, uId): Promise<Track> {
 
-        const user = await this.userModel.findOne({email: dto.artist.email})
+        const user = await this.userModel.findById(uId)
         const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
         const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
 
@@ -225,56 +225,25 @@ export class TrackService {
     async deleteTrackById(id: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(id).populate('artist')
-        const playlists = await this.playlistModel.find()
-        const users = await this.userModel.find().populate('tracksCollection').populate('tracks')
-        const comments = await this.commentModel.find()
 
-        if(track) {
-            users.map(user => {
+        try {
 
-                user.tracks.map(tr => {
-                    if(track['id'] === tr['id']) {
-                        user.tracks.splice(user.tracks.indexOf(tr['id']), 1)
-                    }
-                })
-
-                user.tracksCollection.map(tr => {
-                    if(tr['id'] === track['id']) {
-                        user.tracksCollection.splice(user.tracksCollection.indexOf(tr['id']), 1)
-                    }
-                })
-
-                user.comments.map(co => {
-                    if(track.comments.includes(co)) {
-                        user.comments.splice(user.comments.indexOf(co), 1)
-                    }
-                })
-
-                user.save()
-            })
-
-            playlists.map(playlist => {
-                if(playlist.tracks.includes(track['id'])) {
-                    playlist.tracks.splice(playlist.tracks.indexOf(track['id']), 1)
-
-                    playlist.save()
-                }
-            })
-
-            comments.map(co => {
-                if(track.comments.includes(co['id'])) {
-                    co.deleteOne()
-                }
-            })
+            await this.userModel.find().populate('comments').updateMany({}, {$pullAll: {
+                    comments: [...track.comments],
+                    tracks: [track],
+                    tracksCollection: [track]
+                }})
+            await this.playlistModel.updateMany({}, {$pullAll: {tracks: [track]}})
+            await this.commentModel.deleteMany({track: track})
 
             this.fileService.removeFile(track.audio, 'track', track.artist.username)
             this.fileService.removeFile(track.image, 'track', track.artist.username)
 
             track.deleteOne()
-        } else {
-            throw new HttpException('Track not found', HttpStatus.NOT_FOUND)
+        } catch (e) {
+            throw new HttpException(`Track not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
 
-        return 'done'
+        return 'Track successfully deleted'
     }
 }
