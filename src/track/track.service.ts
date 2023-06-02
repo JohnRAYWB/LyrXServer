@@ -142,56 +142,64 @@ export class TrackService {
         }
     }
 
-    async editTrackArtist(id: ObjectId, dto: editTrackArtistDto): Promise<Track> {
+    async editTrackArtist(id: ObjectId, dto: editTrackArtistDto): Promise<any> {
 
         const track = await this.trackModel.findById(id).populate('artist')
-        let trackOwner = await this.userModel.findById(track.artist['id']).populate('tracks')
-        const user = await this.userModel.findById(dto.artist)
+        const trackOwner = await this.userModel.findById(track.artist['id']).populate('tracks')
+        const newOwner = await this.userModel.findById(dto.artist)
 
-        if(user && user['id'] !== trackOwner['id']) {
-            trackOwner.tracks.splice(trackOwner.tracks.indexOf(track['id']), 1)
-            trackOwner.save()
+        try {
+            if(newOwner && newOwner['id'] !== trackOwner['id']) {
 
-            track.artist = user['id']
+                this.fileService.moveFile(track.audio,'audio', 'track', trackOwner.username, newOwner.username)
+                this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, newOwner.username)
 
-            user.tracks.push(track['id'])
-            user.save()
+                await trackOwner.updateOne({$pull: {tracks: track['id']}})
+                await track.updateOne({$set: {artist: newOwner['id']}})
+                await newOwner.updateOne({$addToSet: {tracks: track['id']}})
 
-            this.fileService.moveFile(track.audio,'audio', 'track', trackOwner.username, user.username)
-            this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, user.username)
-        }
-
-        track.save()
-        return track
-    }
-
-    async editTrackAudio(id: ObjectId, audio, userId: ObjectId): Promise<Track> {
-
-        const track = await this.trackModel.findById(id).populate('artist')
-
-        if(track && track.artist['id'] === userId) {
-            const audioFile = this.fileService.updateFile(track.audio, audio, FileType.AUDIO, 'track', track.artist.username)
-            track.audio = audioFile
-
-            track.save()
-            return track
-        } else {
-            throw new HttpException('Something goes wrong. Try again', HttpStatus.BAD_REQUEST)
+                return 'Artist successfully updated'
+            } else {
+                throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
-    async editTrackImage(id: ObjectId, image, userId: ObjectId): Promise<Track> {
+    async editTrackAudio(id: ObjectId, audio, userId: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(id).populate('artist')
 
-        if(track && track.artist['id'] === userId) {
-            const imageFile = this.fileService.updateFile(track.image, image, FileType.IMAGE, 'track', track.artist.username)
-            track.image = imageFile
+        try {
+            if(track && track.artist['id'] === userId) {
+                const audioFile = this.fileService.updateFile(track.audio, audio, FileType.AUDIO, 'track', track.artist.username)
+                await track.updateOne({$set: {audio: audioFile}})
 
-            track.save()
-            return track
-        } else {
-            throw new HttpException('Something goes wrong. Try again', HttpStatus.BAD_REQUEST)
+                return 'Audio successfully updated'
+            } else {
+                throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Audio not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+        }
+    }
+
+    async editTrackImage(id: ObjectId, image, userId: ObjectId): Promise<any> {
+
+        const track = await this.trackModel.findById(id).populate('artist')
+
+        try {
+            if(track && track.artist['id'] === userId) {
+                const imageFile = this.fileService.updateFile(track.image, image, FileType.IMAGE, 'track', track.artist.username)
+                await track.updateOne({$set: {image: imageFile}})
+
+                return 'Image successfully updated'
+            } else {
+                throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Image not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 

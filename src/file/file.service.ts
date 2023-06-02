@@ -37,7 +37,7 @@ export class FileService {
         const destinationPath = path.resolve(__dirname, '..', 'static', route, destinationEntity, file)
 
         if(!fs.existsSync(destination)) {
-            fs.mkdirSync(destination)
+            fs.mkdirSync(destination, {recursive: true})
         }
 
         fs.renameSync(currentPath, destinationPath)
