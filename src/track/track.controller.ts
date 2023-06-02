@@ -97,8 +97,8 @@ export class TrackController {
     }
 
     @Patch('comment/:id')
-    editCommentById(@Param('id') id: ObjectId, @Body('text') text: string) {
-        return this.trackService.editCommentById(id, text)
+    editCommentById(@Request() req, @Param('id') id: ObjectId, @Body('text') text: string) {
+        return this.trackService.editCommentById(id, text, req.user['id'])
     }
 
     @Delete('comment/:id')

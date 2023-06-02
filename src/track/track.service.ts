@@ -195,13 +195,21 @@ export class TrackService {
         }
     }
 
-    async editCommentById(id: ObjectId, text: string): Promise<Comment> {
+    async editCommentById(id: ObjectId, text: string, uId: ObjectId): Promise<any> {
 
-        const comment = await this.commentModel.findByIdAndUpdate(id, {text: text})
+        const comment = await this.commentModel.findById(id)
 
-        comment.save()
+        try{
+            if(uId.toString() === comment.user.toString()) {
+                await comment.updateOne({$set: {text: text}})
 
-        return comment
+                return 'Comment successfully changed'
+            } else {
+                throw new HttpException(`Not your comment`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Comment not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+        }
     }
 
     async deleteCommentById(id: ObjectId, uId: ObjectId): Promise<any> {
