@@ -30,8 +30,8 @@ export class TrackController {
     }
 
     @Get(':id')
-    getTrackById(@Param('id') id: ObjectId) {
-        return this.trackService.getTrackById(id)
+    getTrackById(@Param('id') tId: ObjectId) {
+        return this.trackService.getTrackById(tId)
     }
 
     @Get('search')
@@ -45,70 +45,70 @@ export class TrackController {
         {name: 'audio', maxCount: 1},
         {name: 'image', maxCount: 1}
     ]))
-    createTrack(@UploadedFiles() files, @Request() req, @Body() dto: createTrackDto) {
+    createTrack(@Request() req, @UploadedFiles() files, @Body() dto: createTrackDto) {
         const {audio, image} = files
-        return this.trackService.createTrack(dto, audio[0], image[0], req.user['id'])
+        return this.trackService.createTrack(req.user['id'], dto, audio[0], image[0])
     }
 
     @Post('listens/:id')
-    incrementListens(@Param('id') id: ObjectId) {
-        return this.trackService.incrementTrackListens(id)
+    incrementListens(@Param('id') tId: ObjectId) {
+        return this.trackService.incrementTrackListens(tId)
     }
 
     @Post('add/:id')
-    addTrackToCollection(@Param('id') id: ObjectId, @Request() req) {
-        return this.trackService.addTrackToCollection(id, req.user['id'])
+    addTrackToCollection(@Request() req, @Param('id') tId: ObjectId) {
+        return this.trackService.addTrackToCollection(req.user['id'], tId)
     }
 
     @Post('remove/:id')
-    removeTrackToCollection(@Param('id') id: ObjectId, @Request() req) {
-        return this.trackService.removeTrackFromCollection(id, req.user['id'])
+    removeTrackToCollection(@Request() req, @Param('id') tId: ObjectId) {
+        return this.trackService.removeTrackFromCollection(req.user['id'], tId)
     }
 
     @Post('comment')
     addComment(@Request() req, @Body() dto: createCommentDto) {
-        return this.trackService.addComment({...dto, user: req.user})
+        return this.trackService.addComment(req.user['id'], dto)
     }
 
     @Roles('artist')
     @Patch(':id/description')
-    editTrackDescription(@Request() req, @Param('id') id: ObjectId, @Body() dto: editTrackDescriptionDto) {
-        return this.trackService.editTrackDescription(id, dto, req.user['id'])
+    editTrackDescription(@Request() req, @Param('id') tId: ObjectId, @Body() dto: editTrackDescriptionDto) {
+        return this.trackService.editTrackDescription(req.user['id'], tId, dto)
     }
 
     @Roles('admin')
     @Patch(':id/artist')
-    editTrackArtist(@Param('id') id: ObjectId, @Body() dto: editTrackArtistDto) {
-        return this.trackService.editTrackArtist(id, dto)
+    editTrackArtist(@Param('id') tId: ObjectId, @Body() dto: editTrackArtistDto) {
+        return this.trackService.editTrackArtist(tId, dto)
     }
 
     @Roles('artist')
     @Patch(':id/audio')
     @UseInterceptors(FileInterceptor('audio'))
-    editTrackAudio(@Request() req, @Param('id') id: ObjectId, @UploadedFile() audio) {
-        return this.trackService.editTrackAudio(id, audio, req.user['id'])
+    editTrackAudio(@Request() req, @Param('id') tId: ObjectId, @UploadedFile() audio) {
+        return this.trackService.editTrackAudio(req.user['id'], tId, audio)
     }
 
     @Roles('artist')
     @Patch(':id/image')
     @UseInterceptors(FileInterceptor('image'))
-    editTrackImage(@Request() req, @Param('id') id: ObjectId, @UploadedFile() image) {
-        return this.trackService.editTrackImage(id, image, req.user['id'])
+    editTrackImage(@Request() req, @Param('id') tId: ObjectId, @UploadedFile() image) {
+        return this.trackService.editTrackImage(req.user['id'], tId, image)
     }
 
     @Patch('comment/:id')
-    editCommentById(@Request() req, @Param('id') id: ObjectId, @Body('text') text: string) {
-        return this.trackService.editCommentById(id, text, req.user['id'])
+    editCommentById(@Request() req, @Param('id') tId: ObjectId, @Body('text') text: string) {
+        return this.trackService.editCommentById(req.user['id'], tId, text)
     }
 
     @Delete('comment/:id')
-    deleteCommentById(@Request() req, @Param('id') id: ObjectId) {
-        return this.trackService.deleteCommentById(id, req.user['id'])
+    deleteCommentById(@Request() req, @Param('id') tId: ObjectId) {
+        return this.trackService.deleteCommentById(req.user['id'], tId)
     }
 
     @Roles('admin')
     @Delete(':id')
-    deleteTrackById(@Param('id') id: ObjectId) {
-        return this.trackService.deleteTrackById(id)
+    deleteTrackById(@Param('id') tId: ObjectId) {
+        return this.trackService.deleteTrackById(tId)
     }
 }

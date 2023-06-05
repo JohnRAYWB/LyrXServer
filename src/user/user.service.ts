@@ -6,9 +6,7 @@ import {RoleService} from "../role/role.service";
 import {createUserDto} from "./dto/create.user.dto";
 import {addRoleDto} from "./dto/add.role.dto";
 import {banUserDto} from "./dto/ban.user.dto";
-import {aboutDto} from "./dto/about.dto";
 import {birthDto} from "./dto/birth.dto";
-import {avatarDto} from "./dto/avatar.dto";
 import {FileService, FileType} from "../file/file.service";
 import {Track} from "../track/schema/track.schema";
 import {TrackService} from "../track/track.service";
@@ -59,14 +57,6 @@ export class UserService {
         return userList
     }
 
-    async createUser(dto: createUserDto): Promise<User> {
-
-        const role = await this.roleService.getRole('user')
-        const user = await this.userModel.create({...dto, roles: role})
-
-        return user.populate('roles')
-    }
-
     async getOwnCollection(uId: ObjectId): Promise<Track[]> {
         const user = await this.userModel.findById(uId).populate('tracksCollection')
 
@@ -79,78 +69,81 @@ export class UserService {
         return user.playlistsCollection
     }
 
+    async createUser(dto: createUserDto): Promise<User> {
 
+        const role = await this.roleService.getRole('user')
+        const user = await this.userModel.create({...dto, roles: role})
 
-    async addAbout(dto: aboutDto): Promise<User> {
-        const user = await this.userModel.findOne({email: dto.user.email})
-
-        if (user) {
-            user.about = dto.about
-            user.save()
-
-            return user
-        } else {
-            throw new HttpException('User service: You cannot do this right now', HttpStatus.BAD_REQUEST)
-        }
-
+        return user
     }
 
-    async addAvatar(dto: avatarDto): Promise<User> {
-        const user = await this.userModel.findOne({email: dto.user.email})
-        const file = this.fileService.createFile(FileType.IMAGE, dto.avatar, 'profile', user.username)
+    async addAbout(uId: ObjectId, about: string): Promise<any> {
+
+        try {
+            await this.userModel.findByIdAndUpdate(uId, {$set: {about: about}})
+
+            return 'Your info changed successfully'
+        } catch (e) {
+            throw new HttpException('User service: Something goes wrong', HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    async addAvatar(uId: ObjectId, file): Promise<any> {
+        const user = await this.userModel.findById(uId)
+        const filePath = this.fileService.createFile(FileType.IMAGE, file, 'profile', user.username)
 
         if (user.avatar) {
             this.fileService.removeFile(user.avatar, 'profile', user.username)
         }
 
-        user.avatar = file
-        user.save()
+        await user.updateOne({$set: {avatar: filePath}})
 
-        return user
+        return 'Your avatar changed successfully'
     }
 
-    async addBirth(dto: birthDto): Promise<User> {
-        const user = await this.userModel.findOne({email: dto.user.email})
+    async addBirth(uId: ObjectId, dto: birthDto): Promise<any> {
 
-        if (user) {
-            user.birth = dto.birth
-            user.save()
+        try {
+            await this.userModel.findByIdAndUpdate(uId, {$set: {birth: dto.birth}})
 
-            return user
-        } else {
-            throw new HttpException('User service: You cannot do this right now', HttpStatus.BAD_REQUEST)
-        }
-
-    }
-
-    async addRole(dto: addRoleDto): Promise<User> {
-
-        const user = await this.userModel.findById(dto.userId).populate('roles')
-        const foundRole = await this.roleService.getRole(dto.role)
-
-        if (user.roles.find(role => role.role === dto.role)) {
-            throw new HttpException('User service: User already has this role', HttpStatus.BAD_REQUEST)
-        }
-
-        if (user && foundRole) {
-            user.roles.push(foundRole['id'])
-            user.save()
-
-            return user
+            return 'Your bDay update successfully'
+        } catch (e) {
+            throw new HttpException(`User service: You cannot do this right now. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
         }
     }
 
-    async banUser(dto: banUserDto): Promise<User> {
-        const user = await this.userModel.findById(dto.userId)
+    async addRole(dto: addRoleDto): Promise<any> {
 
-        if (user) {
-            user.ban = true
-            user.banReason = dto.banReason
-            user.save()
+        const role = await this.roleService.getRole(dto.role)
+        const user = await this.userModel.findById(dto.uId)
 
-            return user
-        } else {
-            throw new HttpException('User service: User not found', HttpStatus.BAD_REQUEST)
+        try {
+            if(!user.roles.find(r => r.toString() === role['id'])) {
+                await user.updateOne({$addToSet: {roles: role['id']}})
+
+                return 'Role add successfully'
+            } else {
+                throw new HttpException('User has this role already', HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`User service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    async banUser(dto: banUserDto): Promise<any> {
+
+        const user = await this.userModel.findById(dto.uId)
+
+        try {
+            if(!user.ban) {
+                await user.updateOne({$set: {ban: true, banReason: dto.banReason}})
+
+                return 'User banned successfully'
+            } else {
+                throw new HttpException('User has ban already', HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`User service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
         }
     }
 

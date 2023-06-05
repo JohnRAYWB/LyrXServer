@@ -2,7 +2,7 @@ import {ObjectId} from "mongoose";
 
 export class banUserDto {
 
-    readonly userId: ObjectId
+    readonly uId: ObjectId
 
     readonly banReason: string
 }

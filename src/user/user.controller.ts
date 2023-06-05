@@ -3,10 +3,8 @@ import {UserService} from "./user.service";
 import {addRoleDto} from "./dto/add.role.dto";
 import {Roles} from "../role/role.guard";
 import {banUserDto} from "./dto/ban.user.dto";
-import {aboutDto} from "./dto/about.dto";
 import {birthDto} from "./dto/birth.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
-import {avatarDto} from "./dto/avatar.dto";
 import {ObjectId} from "mongoose";
 
 @Controller('users')
@@ -45,30 +43,20 @@ export class UserController {
         return this.userService.getOwnPlaylists(req.user['id'])
     }
 
-    @Post('profile/collection/:id')
-    removeTrackFromCollection(@Request() req, @Param('id') id: ObjectId) {
-        return this.userService.removeTrackFromCollection(id, req.user['id'])
-    }
-
-    @Post('profile/playlists/:id')
-    removePlaylistFromCollection(@Request() req, @Param('id') id: ObjectId) {
-        return this.userService.removePlaylistFromCollection(id, req.user['id'])
-    }
-
     @Post('profile/about')
-    addAbout(@Request() req, @Body() dto: aboutDto) {
-        return this.userService.addAbout({...dto, user: req.user})
+    addAbout(@Request() req, @Body('about') about: string) {
+        return this.userService.addAbout(req.user['id'], about)
     }
 
     @Post('profile/avatar')
     @UseInterceptors(FileInterceptor('avatar'))
-    addAvatar(@Request() req,@UploadedFile() file, @Body() dto: avatarDto) {
-        return this.userService.addAvatar({user: req.user, avatar: file})
+    addAvatar(@Request() req, @UploadedFile() file) {
+        return this.userService.addAvatar(req.user['id'], file)
     }
 
     @Post('profile/birth')
     addBirth(@Request() req, @Body() dto: birthDto) {
-        return this.userService.addBirth({...dto, user: req.user})
+        return this.userService.addBirth(req.user['id'], dto)
     }
 
     @Roles('admin')
@@ -81,5 +69,15 @@ export class UserController {
     @Post('ban')
     banUser(@Body() dto: banUserDto) {
         return this.userService.banUser(dto)
+    }
+
+    @Post('profile/collection/remove/:id')
+    removeTrackFromCollection(@Request() req, @Param('id') id: ObjectId) {
+        return this.userService.removeTrackFromCollection(id, req.user['id'])
+    }
+
+    @Post('profile/playlists/remove/:id')
+    removePlaylistFromCollection(@Request() req, @Param('id') id: ObjectId) {
+        return this.userService.removePlaylistFromCollection(id, req.user['id'])
     }
 }

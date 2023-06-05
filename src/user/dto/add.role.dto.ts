@@ -2,7 +2,7 @@ import {ObjectId} from "mongoose";
 
 export class addRoleDto {
 
-    readonly userId: ObjectId
+    readonly uId: ObjectId
 
     readonly role: string
 }

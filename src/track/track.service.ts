@@ -29,9 +29,9 @@ export class TrackService {
         return tracksList
     }
 
-    async getTrackById(id: ObjectId): Promise<Track> {
+    async getTrackById(tId: ObjectId): Promise<Track> {
 
-        const track = await this.trackModel.findById(id).populate('comments').populate('artist')
+        const track = await this.trackModel.findById(tId).populate('comments').populate('artist')
 
         return track
     }
@@ -45,106 +45,111 @@ export class TrackService {
         return track
     }
 
-    async createTrack(dto: createTrackDto, audio, image, uId): Promise<Track> {
+    async createTrack(uId, dto: createTrackDto, audio, image): Promise<Track> {
 
         const user = await this.userModel.findById(uId)
         const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
         const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
 
         const track = await this.trackModel.create({...dto, artist: user['id'], listens: 0, favorites: 0, audio: audioFile, image: imageFile})
-
-        user.tracks.push(track['id'])
-        user.save()
+        await user.updateOne({$addToSet: {tracks: track['id']}})
 
         return track
     }
 
-    async incrementTrackListens(id: ObjectId): Promise<Track> {
+    async incrementTrackListens(tId: ObjectId): Promise<any> {
 
-        const track = await this.trackModel.findById(id)
+        await this.trackModel.findByIdAndUpdate(tId, {$inc: {listens: 1}})
 
-        track.listens++
-        await track.save()
-
-        return track
+        return 'Thanks for listening this song'
     }
 
-    async addTrackToCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
+    async addTrackToCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(tId)
         const user = await this.userModel.findById(uId)
 
-        if(track && user) {
-            user.tracksCollection.push(track['id'])
-            user.save()
+        try {
+            if(!user.tracksCollection.find(t => t.toString() === tId.toString())) {
+                await track.updateOne({$inc: {favorites: 1}})
+                await user.updateOne({$addToSet: {tracksCollection: track['id']}})
 
-            track.favorites++
-            track.save()
-
-            return 'done'
-        } else {
-            throw new HttpException('Something goes wrong. Please try again', HttpStatus.BAD_REQUEST)
+                return 'Track add to your collection successfully'
+            } else {
+                throw new HttpException('You already has this track in your collection', HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
-    async removeTrackFromCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
+    async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
+
         const track = await this.trackModel.findById(tId)
         const user = await this.userModel.findById(uId)
 
-        if(track && user) {
-            user.tracksCollection.splice(user.tracksCollection.indexOf(track['id']), 1)
-            user.save()
+        try {
+            if(user.tracksCollection.find(t => t.toString() === tId.toString())) {
+                await track.updateOne({$inc: {favorites: -1}})
+                await user.updateOne({$pull: {tracksCollection: track['id']}})
 
-            track.favorites--
-            track.save()
-
-            return 'done'
-        } else {
-            throw new HttpException('Something goes wrong. Please try again', HttpStatus.BAD_REQUEST)
+                return 'Track remove from your collection successfully'
+            } else {
+                throw new HttpException(`You hasn't this track in your collection`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
-    async addComment(dto: createCommentDto): Promise<Comment> {
+    async addComment(uId, dto: createCommentDto): Promise<any> {
 
-        const user = await this.userModel.findOne({email: dto.user.email})
+        const user = await this.userModel.findById(uId)
         const track = await this.trackModel.findById(dto.track)
 
-        if(!user.ban) {
-            const comment = await this.commentModel.create({...dto, user: user['id']})
-            user.comments.push(comment['id'])
-            user.save()
-            track.comments.push(comment['id'])
-            track.save()
+        try {
+            if(!user.ban) {
+                const comment = await this.commentModel.create({...dto, user: user['id']})
+                await user.updateOne({$addToSet: {comments: comment['id']}})
+                await track.updateOne({$addToSet: {comments: comment['id']}})
 
-            return comment
-        } else {
-            throw new HttpException(`You are banned. Ban reason: ${user.banReason}`, HttpStatus.BAD_REQUEST)
+                return 'Comment add successfully'
+            } else {
+                throw new HttpException(`You are banned. Ban reason: ${user.banReason}`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+        }
+
+    }
+
+    async editTrackDescription(uId: ObjectId, tId: ObjectId, dto: editTrackDescriptionDto): Promise<any> {
+
+        const track = await this.trackModel.findById(tId).populate('artist')
+
+        try {
+            if(track.artist['id'] === uId.toString()) {
+                if(dto.name) {
+                    await track.updateOne({$set: {name: dto.name}})
+                }
+
+                if(dto.description) {
+                    await track.updateOne({$set: {description: dto.description}})
+                }
+
+                return 'Changes update successfully'
+            } else {
+                throw new HttpException(`It's not your track`, HttpStatus.BAD_REQUEST)
+            }
+
+        } catch (e) {
+            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
-    async editTrackDescription(id: ObjectId, dto: editTrackDescriptionDto, userId: ObjectId): Promise<Track> {
+    async editTrackArtist(tId: ObjectId, dto: editTrackArtistDto): Promise<any> {
 
-        const track = await this.trackModel.findById(id).populate('artist')
-
-        if(track && track.artist['id'] === userId) {
-            if(dto.name) {
-                track.name = dto.name
-            }
-
-            if(dto.description) {
-                track.description = dto.description
-            }
-
-            track.save()
-            return track
-        } else {
-            throw new HttpException('Something goes wrong. Try again', HttpStatus.BAD_REQUEST)
-        }
-    }
-
-    async editTrackArtist(id: ObjectId, dto: editTrackArtistDto): Promise<any> {
-
-        const track = await this.trackModel.findById(id).populate('artist')
+        const track = await this.trackModel.findById(tId).populate('artist')
         const trackOwner = await this.userModel.findById(track.artist['id']).populate('tracks')
         const newOwner = await this.userModel.findById(dto.artist)
 
@@ -167,12 +172,12 @@ export class TrackService {
         }
     }
 
-    async editTrackAudio(id: ObjectId, audio, userId: ObjectId): Promise<any> {
+    async editTrackAudio(uId: ObjectId, tId: ObjectId, audio): Promise<any> {
 
-        const track = await this.trackModel.findById(id).populate('artist')
+        const track = await this.trackModel.findById(tId).populate('artist')
 
         try {
-            if(track && track.artist['id'] === userId) {
+            if(track && track.artist['id'] === uId) {
                 const audioFile = this.fileService.updateFile(track.audio, audio, FileType.AUDIO, 'track', track.artist.username)
                 await track.updateOne({$set: {audio: audioFile}})
 
@@ -185,12 +190,12 @@ export class TrackService {
         }
     }
 
-    async editTrackImage(id: ObjectId, image, userId: ObjectId): Promise<any> {
+    async editTrackImage(uId: ObjectId, tId: ObjectId, image): Promise<any> {
 
-        const track = await this.trackModel.findById(id).populate('artist')
+        const track = await this.trackModel.findById(tId).populate('artist')
 
         try {
-            if(track && track.artist['id'] === userId) {
+            if(track && track.artist['id'] === uId) {
                 const imageFile = this.fileService.updateFile(track.image, image, FileType.IMAGE, 'track', track.artist.username)
                 await track.updateOne({$set: {image: imageFile}})
 
@@ -203,9 +208,9 @@ export class TrackService {
         }
     }
 
-    async editCommentById(id: ObjectId, text: string, uId: ObjectId): Promise<any> {
+    async editCommentById(uId: ObjectId, tId: ObjectId, text: string): Promise<any> {
 
-        const comment = await this.commentModel.findById(id)
+        const comment = await this.commentModel.findById(tId)
 
         try{
             if(uId.toString() === comment.user.toString()) {
@@ -220,14 +225,14 @@ export class TrackService {
         }
     }
 
-    async deleteCommentById(id: ObjectId, uId: ObjectId): Promise<any> {
+    async deleteCommentById(uId: ObjectId, tId: ObjectId): Promise<any> {
 
-        const comment = await this.commentModel.findById(id).populate(['user', 'track'])
+        const comment = await this.commentModel.findById(tId).populate(['user', 'track'])
         const user = await this.userModel.findById(uId).populate('roles')
 
         try {
             if(user['id'] === comment.user['id'] || user.roles.find(role => role.role === 'admin')) {
-                await this.userModel.findByIdAndUpdate(comment.user['id'], {$pull: {comments: comment['id']}})
+                await user.updateOne({$pull: {comments: comment['id']}})
                 await this.trackModel.findByIdAndUpdate(comment.track['id'],{$pull: {comments: comment['id']}})
 
                 comment.deleteOne()
@@ -241,9 +246,9 @@ export class TrackService {
         }
     }
 
-    async deleteTrackById(id: ObjectId): Promise<any> {
+    async deleteTrackById(tId: ObjectId): Promise<any> {
 
-        const track = await this.trackModel.findById(id).populate('artist')
+        const track = await this.trackModel.findById(tId).populate('artist')
 
         try {
             await this.userModel.find().populate('comments').updateMany({}, {$pullAll: {
