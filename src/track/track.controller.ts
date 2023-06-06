@@ -60,9 +60,9 @@ export class TrackController {
         return this.trackService.addTrackToCollection(req.user['id'], tId)
     }
 
-    @Post('remove/:id')
-    removeTrackToCollection(@Request() req, @Param('id') tId: ObjectId) {
-        return this.trackService.removeTrackFromCollection(req.user['id'], tId)
+    @Post('playlist/add/:id')
+    addTrackToPlaylist(@Request() req, @Param('id') tId: ObjectId, @Body('playlist') pId: ObjectId) {
+        return this.trackService.addTrackToPlaylist(req.user['id'], tId, pId)
     }
 
     @Post('comment')
@@ -99,6 +99,16 @@ export class TrackController {
     @Patch('comment/:id')
     editCommentById(@Request() req, @Param('id') tId: ObjectId, @Body('text') text: string) {
         return this.trackService.editCommentById(req.user['id'], tId, text)
+    }
+
+    @Post('remove/:id')
+    removeTrackFromCollection(@Request() req, @Param('id') tId: ObjectId) {
+        return this.trackService.removeTrackFromCollection(req.user['id'], tId)
+    }
+
+    @Post('playlist/remove/:id')
+    removeTrackFromPlaylist(@Request() req, @Param('id') tId: ObjectId, @Body('playlist') pId: ObjectId) {
+        return this.trackService.removeTrackFromPlaylist(req.user['id'], tId, pId)
     }
 
     @Delete('comment/:id')

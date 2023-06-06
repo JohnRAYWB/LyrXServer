@@ -33,7 +33,7 @@ export class User {
     ban: boolean
 
     @Prop()
-    banReason: [string]
+    banReason: String[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Role'}]})
     roles: Role[]
@@ -46,6 +46,9 @@ export class User {
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Track'}]})
     tracksCollection: Track[]
+
+    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Playlist'}]})
+    playlists: Playlist[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Playlist'}]})
     playlistsCollection: Playlist[]

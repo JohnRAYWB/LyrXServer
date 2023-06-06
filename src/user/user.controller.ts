@@ -49,8 +49,8 @@ export class UserController {
 
     @Post('profile/avatar')
     @UseInterceptors(FileInterceptor('avatar'))
-    addAvatar(@Request() req, @UploadedFile() file) {
-        return this.userService.addAvatar(req.user['id'], file)
+    addAvatar(@Request() req, @UploadedFile() avatar) {
+        return this.userService.addAvatar(req.user['id'], avatar)
     }
 
     @Post('profile/birth')

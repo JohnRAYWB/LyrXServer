@@ -79,26 +79,30 @@ export class TrackService {
                 throw new HttpException('You already has this track in your collection', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
-    async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
+    async addTrackToPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(tId)
-        const user = await this.userModel.findById(uId)
+        const playlist = await this.playlistModel.findById(pId)
 
         try {
-            if(user.tracksCollection.find(t => t.toString() === tId.toString())) {
-                await track.updateOne({$inc: {favorites: -1}})
-                await user.updateOne({$pull: {tracksCollection: track['id']}})
+            if(playlist.user.toString() === uId.toString()) {
+                if(!playlist.tracks.find(t => t.toString() === tId.toString())) {
+                    await playlist.updateOne({$addToSet: {tracks: tId}})
+                    await track.updateOne({$inc: {favorites: 1}})
 
-                return 'Track remove from your collection successfully'
+                    return 'Track add to your playlist successfully'
+                } else {
+                    throw new HttpException(`Playlist include this track already`, HttpStatus.FORBIDDEN)
+                }
             } else {
-                throw new HttpException(`You hasn't this track in your collection`, HttpStatus.BAD_REQUEST)
+                throw new HttpException(`It's not your playlist`, HttpStatus.FORBIDDEN)
             }
         } catch (e) {
-            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
         }
     }
 
@@ -118,7 +122,7 @@ export class TrackService {
                 throw new HttpException(`You are banned. Ban reason: ${user.banReason}`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
 
     }
@@ -143,7 +147,7 @@ export class TrackService {
             }
 
         } catch (e) {
-            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
@@ -168,7 +172,7 @@ export class TrackService {
                 throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
@@ -186,7 +190,7 @@ export class TrackService {
                 throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Audio not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
@@ -204,7 +208,7 @@ export class TrackService {
                 throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Image not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
@@ -221,7 +225,49 @@ export class TrackService {
                 throw new HttpException(`Not your comment`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Comment not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+        }
+    }
+
+    async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
+
+        const track = await this.trackModel.findById(tId)
+        const user = await this.userModel.findById(uId)
+
+        try {
+            if(user.tracksCollection.find(t => t.toString() === tId.toString())) {
+                await track.updateOne({$inc: {favorites: -1}})
+                await user.updateOne({$pull: {tracksCollection: track['id']}})
+
+                return 'Track remove from your collection successfully'
+            } else {
+                throw new HttpException(`You hasn't this track in your collection`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+        }
+    }
+
+    async removeTrackFromPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
+
+        const track = await this.trackModel.findById(tId)
+        const playlist = await this.playlistModel.findById(pId)
+
+        try {
+            if(playlist.user.toString() === uId.toString()) {
+                if(playlist.tracks.find(t => t.toString() === tId.toString())) {
+                    await playlist.updateOne({$pull: {tracks: tId}})
+                    await track.updateOne({$inc: {favorites: -1}})
+
+                    return 'Track remove from your playlist successfully'
+                } else {
+                    throw new HttpException(`Playlist not include this track`, HttpStatus.FORBIDDEN)
+                }
+            } else {
+                throw new HttpException(`It's not your playlist`, HttpStatus.FORBIDDEN)
+            }
+        } catch (e) {
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
         }
     }
 
@@ -242,7 +288,7 @@ export class TrackService {
                 throw new HttpException(`Not your comment`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Comment not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
     }
 
@@ -264,7 +310,7 @@ export class TrackService {
 
             track.deleteOne()
         } catch (e) {
-            throw new HttpException(`Track not found or something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
         }
 
         return 'Track successfully deleted'

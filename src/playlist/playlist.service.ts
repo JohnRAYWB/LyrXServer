@@ -4,8 +4,8 @@ import {Playlist, PlaylistDocument} from "./schema/playlist.schema";
 import {Model, ObjectId} from "mongoose";
 import {FileService, FileType} from "../file/file.service";
 import {User, UserDocument} from "../user/schema/user.schema";
-import {addTrackToPlaylistDto} from "./dto/add.track.to.playlist.dto";
 import {Track, TrackDocument} from "../track/schema/track.schema";
+import {TrackService} from "../track/track.service";
 
 @Injectable()
 export class PlaylistService {
@@ -14,6 +14,7 @@ export class PlaylistService {
         @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
         @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
         @InjectModel(User.name) private userModel: Model<UserDocument>,
+        private trackService: TrackService,
         private fileService: FileService
     ) {
     }
@@ -25,9 +26,9 @@ export class PlaylistService {
         return playlists
     }
 
-    async getPlaylistById(id: ObjectId): Promise<Playlist> {
+    async getPlaylistById(pId: ObjectId): Promise<Playlist> {
 
-        const playlist = await this.playlistModel.findById(id).populate('tracks')
+        const playlist = await this.playlistModel.findById(pId).populate('tracks')
 
         return playlist
     }
@@ -41,19 +42,18 @@ export class PlaylistService {
         return playlists
     }
 
-    async createPlaylist(userId, name, image): Promise<Playlist> {
+    async createPlaylist(uId, name, image): Promise<Playlist> {
 
-        const user = await this.userModel.findById(userId)
+        const user = await this.userModel.findById(uId)
         const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'playlist', user.username)
         const playlist = await this.playlistModel.create({name: name, user: user['id'], favorites: 0, image: imagePath})
 
-        user.playlistsCollection.push(playlist['id'])
-        user.save()
+        await user.updateOne({$push: {playlists: playlist['id']}})
 
         return playlist
     }
 
-    async dropAlbum(name, audio, image, uId, trackName): Promise<Playlist> {
+    /*async dropAlbum(name, audio, image, uId, trackName): Promise<Playlist> {
 
         const user = await this.userModel.findById(uId)
         const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'album', user.username)
@@ -78,44 +78,6 @@ export class PlaylistService {
         return playlist
     }
 
-    async addTrackToPlaylist(dto: addTrackToPlaylistDto): Promise<Playlist> {
-
-        const track = await this.trackModel.findById(dto.track)
-        const playlist = await this.playlistModel.findById(dto.playlist).populate('tracks').populate('user')
-        const user = await this.userModel.findById(dto.user)
-
-        if(playlist.user['id'] === user['id']) {
-            playlist.tracks.push(track['id'])
-            track.favorites++
-
-            playlist.save()
-            track.save()
-
-            return playlist
-        } else {
-            throw new HttpException('Something goes wrong', HttpStatus.BAD_REQUEST)
-        }
-    }
-
-    async removeTrackFromPlaylist(dto: addTrackToPlaylistDto): Promise<Playlist> {
-
-        const track = await this.trackModel.findById(dto.track)
-        const playlist = await this.playlistModel.findById(dto.playlist).populate('user')
-        const user = await this.userModel.findById(dto.user)
-
-        if(playlist.user['id'] === user['id'] && playlist.tracks.includes(track['id'])) {
-            playlist.tracks.splice(playlist.tracks.indexOf(track['id']), 1)
-            track.favorites--
-
-            playlist.save()
-            track.save()
-
-            return playlist
-        } else {
-            throw new HttpException('Something goes wrong', HttpStatus.BAD_REQUEST)
-        }
-    }
-
     async addPlaylistToCollection(pId: ObjectId, uId: ObjectId): Promise<any> {
 
         const playlist = await this.playlistModel.findById(pId)
@@ -132,9 +94,13 @@ export class PlaylistService {
         } else {
             throw new HttpException('Seems like you have already this playlist in your collection', HttpStatus.BAD_REQUEST)
         }
+    }*/
+
+    async removeTrackFromPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
+        return this.trackService.removeTrackFromPlaylist(uId, tId, pId)
     }
 
-    async removePlaylistFromCollection(pId: ObjectId, uId: ObjectId): Promise<any> {
+    /*async removePlaylistFromCollection(pId: ObjectId, uId: ObjectId): Promise<any> {
 
         const playlist = await this.playlistModel.findById(pId).populate('user')
         const user = await this.userModel.findById(uId)
@@ -150,9 +116,9 @@ export class PlaylistService {
         } else {
             throw new HttpException('Something goes wrong', HttpStatus.BAD_REQUEST)
         }
-    }
+    }*/
 
-    async deletePlaylist(pId: ObjectId, uId: ObjectId): Promise<any> {
+    /*async deletePlaylist(pId: ObjectId, uId: ObjectId): Promise<any> {
 
         const user = await this.userModel.findById(uId).populate('roles')
         const playlist = await this.playlistModel.findById(pId).populate('user')
@@ -177,5 +143,5 @@ export class PlaylistService {
         }
 
         return 'done'
-    }
+    }*/
 }

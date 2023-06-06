@@ -24,7 +24,6 @@ export class UserService {
     ) {
     }
 
-
     async getAllUsers(): Promise<User[]> {
 
         const usersList = await this.userModel.find()
@@ -88,9 +87,9 @@ export class UserService {
         }
     }
 
-    async addAvatar(uId: ObjectId, file): Promise<any> {
+    async addAvatar(uId: ObjectId, avatar): Promise<any> {
         const user = await this.userModel.findById(uId)
-        const filePath = this.fileService.createFile(FileType.IMAGE, file, 'profile', user.username)
+        const filePath = this.fileService.createFile(FileType.IMAGE, avatar, 'profile', user.username)
 
         if (user.avatar) {
             this.fileService.removeFile(user.avatar, 'profile', user.username)
