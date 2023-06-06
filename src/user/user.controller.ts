@@ -2,7 +2,6 @@ import {Body, Controller, Get, Param, Post, Query, Request, UploadedFile, UseInt
 import {UserService} from "./user.service";
 import {addRoleDto} from "./dto/add.role.dto";
 import {Roles} from "../role/role.guard";
-import {banUserDto} from "./dto/ban.user.dto";
 import {birthDto} from "./dto/birth.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {ObjectId} from "mongoose";
@@ -66,9 +65,15 @@ export class UserController {
     }
 
     @Roles('admin')
-    @Post('ban')
-    banUser(@Body() dto: banUserDto) {
-        return this.userService.banUser(dto)
+    @Post('ban/:id')
+    banUser(@Param('id') uId: ObjectId, @Body('reason') banReason: string) {
+        return this.userService.banUser(uId, banReason)
+    }
+
+    @Roles('admin')
+    @Post('unban/:id')
+    unbanUser(@Param('id') uId: ObjectId) {
+        return this.userService.unbanUser(uId)
     }
 
     @Post('profile/collection/remove/:id')

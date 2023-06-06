@@ -33,7 +33,7 @@ export class User {
     ban: boolean
 
     @Prop()
-    banReason: string
+    banReason: [string]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Role'}]})
     roles: Role[]

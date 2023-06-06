@@ -5,7 +5,6 @@ import {Model, ObjectId} from "mongoose";
 import {RoleService} from "../role/role.service";
 import {createUserDto} from "./dto/create.user.dto";
 import {addRoleDto} from "./dto/add.role.dto";
-import {banUserDto} from "./dto/ban.user.dto";
 import {birthDto} from "./dto/birth.dto";
 import {FileService, FileType} from "../file/file.service";
 import {Track} from "../track/schema/track.schema";
@@ -22,7 +21,8 @@ export class UserService {
         private fileService: FileService,
         private trackService: TrackService,
         private playlistService: PlaylistService
-    ) {}
+    ) {
+    }
 
 
     async getAllUsers(): Promise<User[]> {
@@ -118,7 +118,7 @@ export class UserService {
         const user = await this.userModel.findById(dto.uId)
 
         try {
-            if(!user.roles.find(r => r.toString() === role['id'])) {
+            if (!user.roles.find(r => r.toString() === role['id'])) {
                 await user.updateOne({$addToSet: {roles: role['id']}})
 
                 return 'Role add successfully'
@@ -130,17 +130,34 @@ export class UserService {
         }
     }
 
-    async banUser(dto: banUserDto): Promise<any> {
+    async banUser(uId: ObjectId, banReason: string): Promise<any> {
 
-        const user = await this.userModel.findById(dto.uId)
+        const user = await this.userModel.findById(uId)
 
         try {
-            if(!user.ban) {
-                await user.updateOne({$set: {ban: true, banReason: dto.banReason}})
+            if (!user.ban) {
+                await user.updateOne({$set: {ban: true}, $push: {banReason: banReason}})
 
                 return 'User banned successfully'
             } else {
                 throw new HttpException('User has ban already', HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`User service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    async unbanUser(uId: ObjectId): Promise<any> {
+
+        const user = await this.userModel.findById(uId)
+
+        try {
+            if(user.ban) {
+                await user.updateOne({$set: {ban: false}})
+
+                return 'User unbanned successfully'
+            } else {
+                throw new HttpException(`User hasn't banned`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
             throw new HttpException(`User service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
