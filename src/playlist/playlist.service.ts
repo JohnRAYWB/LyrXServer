@@ -16,8 +16,7 @@ export class PlaylistService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         private trackService: TrackService,
         private fileService: FileService
-    ) {
-    }
+    ) {}
 
     async getAllPlaylists(): Promise<Playlist[]> {
 
@@ -53,6 +52,29 @@ export class PlaylistService {
         return playlist
     }
 
+    async addPlaylistToCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
+
+        const user = await this.userModel.findById(uId)
+        const playlist = await this.playlistModel.findById(pId)
+
+        try {
+            if (!user.playlists.find(p => p.toString() === pId.toString())) {
+                if (!user.playlistsCollection.find(p => p.toString() === pId.toString())) {
+                    await user.updateOne({$addToSet: {playlistsCollection: pId}})
+                    await playlist.updateOne({$inc: {favorites: 1}})
+
+                    return 'Playlist add into your collection successfully'
+                } else {
+                    throw new HttpException(`You have this playlist already`, HttpStatus.BAD_REQUEST)
+                }
+            } else {
+                throw new HttpException(`You can't add your own playlist to your collection!`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+        }
+    }
+
     /*async dropAlbum(name, audio, image, uId, trackName): Promise<Playlist> {
 
         const user = await this.userModel.findById(uId)
@@ -76,72 +98,56 @@ export class PlaylistService {
         }
 
         return playlist
-    }
-
-    async addPlaylistToCollection(pId: ObjectId, uId: ObjectId): Promise<any> {
-
-        const playlist = await this.playlistModel.findById(pId)
-        const user = await this.userModel.findById(uId)
-
-        if (playlist && user && !user.playlistsCollection.includes(playlist['id'])) {
-            user.playlistsCollection.push(playlist['id'])
-            playlist.favorites++
-
-            user.save()
-            playlist.save()
-
-            return 'done'
-        } else {
-            throw new HttpException('Seems like you have already this playlist in your collection', HttpStatus.BAD_REQUEST)
-        }
     }*/
 
     async removeTrackFromPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
         return this.trackService.removeTrackFromPlaylist(uId, tId, pId)
     }
 
-    /*async removePlaylistFromCollection(pId: ObjectId, uId: ObjectId): Promise<any> {
+    async removePlaylistFromCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
 
-        const playlist = await this.playlistModel.findById(pId).populate('user')
         const user = await this.userModel.findById(uId)
+        const playlist = await this.playlistModel.findById(pId)
 
-        if (user.playlistsCollection.includes(playlist['id']) && user['id'] !== playlist.user['id']) {
-            user.playlistsCollection.splice(user.playlistsCollection.indexOf(playlist['id']), 1)
-            playlist.favorites--
+        try {
+            if (user.playlistsCollection.find(p => p.toString() === pId.toString())) {
+                await user.updateOne({$pull: {playlistsCollection: pId}})
+                await playlist.updateOne({$inc: {favorites: -1}})
 
-            user.save()
-            playlist.save()
-
-            return 'done'
-        } else {
-            throw new HttpException('Something goes wrong', HttpStatus.BAD_REQUEST)
+                return 'Playlist remove from your collection successfully'
+            } else {
+                throw new HttpException(`You have not playlist in your collection!`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
         }
-    }*/
+    }
 
-    /*async deletePlaylist(pId: ObjectId, uId: ObjectId): Promise<any> {
+    async deletePlaylist(uId: ObjectId, pId: ObjectId): Promise<any> {
 
         const user = await this.userModel.findById(uId).populate('roles')
-        const playlist = await this.playlistModel.findById(pId).populate('user')
-        const users = await this.userModel.find().populate('playlistsCollection')
+        const playlist = await this.playlistModel.findById(pId)
 
-        if (user['id'] === playlist.user['id'] || user.roles.find(role => role.role === 'admin')) {
-            users.map(user => {
-                user.playlistsCollection.map(uPlaylist => {
-                    if(uPlaylist['id'] === playlist['id']) {
-                        user.playlistsCollection.splice(user.playlistsCollection.indexOf(uPlaylist['id']), 1)
+        try {
+            if (uId.toString() === playlist.user.toString() || user.roles.find(r => r.role === 'admin')) {
+                await this.userModel.find().updateMany({}, {
+                    $pullAll: {
+                        playlists: [playlist],
+                        playlistsCollection: [playlist]
                     }
                 })
 
-                user.save()
-            })
+                await this.trackModel.find().updateMany({['id']: [...playlist.tracks]}, {$inc: {favorites: -1}}) // rewrite
 
-            this.fileService.removeFile(playlist.image, 'playlist', playlist.user.username)
+                this.fileService.removeFile(playlist.image, 'playlist', user.username)
+                playlist.deleteOne()
 
-            playlist.deleteOne()
-        } else {
-            throw new HttpException('Playlist service: Permission denied', HttpStatus.FORBIDDEN)
+                return 'Playlist deleted successfully'
+            } else {
+                throw new HttpException(`Permission denied`, HttpStatus.FORBIDDEN)
+            }
+        } catch (e) {
+            throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
         }
-
-        return 'done'
-    }*/
+    }
 }

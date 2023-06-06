@@ -63,9 +63,9 @@ export class UserService {
     }
 
     async getOwnPlaylists(uId: ObjectId): Promise<Playlist[]> {
-        const user = await this.userModel.findById(uId).populate('playlistsCollection')
-
-        return user.playlistsCollection
+        const user = await this.userModel.findById(uId).populate(['playlists', 'playlistsCollection'])
+        const {playlists, playlistsCollection} = user
+        return [...playlists, ...playlistsCollection]
     }
 
     async createUser(dto: createUserDto): Promise<User> {
@@ -163,11 +163,11 @@ export class UserService {
         }
     }
 
-    async removeTrackFromCollection(tId: ObjectId, uId: ObjectId): Promise<any> {
-        return this.trackService.removeTrackFromCollection(tId, uId)
+    async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
+        return this.trackService.removeTrackFromCollection(uId, tId)
     }
 
-    async removePlaylistFromCollection(pId: ObjectId, uId: ObjectId): Promise<any> {
-        return this.playlistService.removePlaylistFromCollection(pId, uId)
+    async removePlaylistFromCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
+        return this.playlistService.removePlaylistFromCollection(uId, pId)
     }
 }

@@ -241,7 +241,7 @@ export class TrackService {
 
                 return 'Track remove from your collection successfully'
             } else {
-                throw new HttpException(`You hasn't this track in your collection`, HttpStatus.BAD_REQUEST)
+                throw new HttpException(`You have not this track in your collection`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
             throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)

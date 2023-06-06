@@ -43,7 +43,7 @@ export class PlaylistController {
         return this.playlistService.createPlaylist(req.user['id'], name, image)
     }
 
-    @Roles('artist')
+    /*@Roles('artist')
     @Post('drop')
     @UseInterceptors(FileFieldsInterceptor([
         {name: 'image', maxCount: 1},
@@ -56,11 +56,11 @@ export class PlaylistController {
         } else {
             throw new HttpException('You forgot add audio or track name. Please check one more time', HttpStatus.BAD_REQUEST)
         }
-    }
+    }*/
 
-    @Post('add_playlist/:id')
-    addPlaylistToCollection(@Request() req, @Param('id') id: ObjectId) {
-        return this.playlistService.addPlaylistToCollection(id, req.user['id'])
+    @Post('add/:id')
+    addPlaylistToCollection(@Request() req, @Param('id') pId: ObjectId) {
+        return this.playlistService.addPlaylistToCollection(req.user['id'], pId)
     }
 
     @Post(':id/remove')
@@ -68,13 +68,13 @@ export class PlaylistController {
         return this.playlistService.removeTrackFromPlaylist(req.user['id'], tId, pId)
     }
 
-    @Post('remove_playlist/:id')
-    removePlaylistFromCollection(@Request() req, @Param('id') id: ObjectId) {
-        return this.playlistService.removePlaylistFromCollection(id, req.user['id'])
+    @Post('remove/:id')
+    removePlaylistFromCollection(@Request() req, @Param('id') pId: ObjectId) {
+        return this.playlistService.removePlaylistFromCollection(req.user['id'], pId)
     }
 
     @Delete(':id')
-    deletePlaylist(@Param('id') id: ObjectId, @Request() req) {
-        return this.playlistService.deletePlaylist(id, req.user['id'])
+    deletePlaylist(@Request() req, @Param('id') pId: ObjectId) {
+        return this.playlistService.deletePlaylist(req.user['id'], pId)
     }
 }

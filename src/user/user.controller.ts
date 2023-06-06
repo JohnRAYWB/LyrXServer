@@ -77,12 +77,12 @@ export class UserController {
     }
 
     @Post('profile/collection/remove/:id')
-    removeTrackFromCollection(@Request() req, @Param('id') id: ObjectId) {
-        return this.userService.removeTrackFromCollection(id, req.user['id'])
+    removeTrackFromCollection(@Request() req, @Param('id') tId: ObjectId) {
+        return this.userService.removeTrackFromCollection(req.user['id'], tId)
     }
 
     @Post('profile/playlists/remove/:id')
-    removePlaylistFromCollection(@Request() req, @Param('id') id: ObjectId) {
-        return this.userService.removePlaylistFromCollection(id, req.user['id'])
+    removePlaylistFromCollection(@Request() req, @Param('id') pId: ObjectId) {
+        return this.userService.removePlaylistFromCollection(req.user['id'], pId)
     }
 }
