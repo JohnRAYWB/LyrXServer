@@ -57,14 +57,18 @@ export class UserService {
     }
 
     async getOwnCollection(uId: ObjectId): Promise<Track[]> {
-        const user = await this.userModel.findById(uId).populate('tracksCollection')
 
-        return user.tracksCollection
+        const user = await this.userModel.findById(uId).populate(['tracks', 'tracksCollection'])
+        const {tracks, tracksCollection} = user
+
+        return [...tracks, ...tracksCollection]
     }
 
     async getOwnPlaylists(uId: ObjectId): Promise<Playlist[]> {
+
         const user = await this.userModel.findById(uId).populate(['playlists', 'playlistsCollection'])
         const {playlists, playlistsCollection} = user
+
         return [...playlists, ...playlistsCollection]
     }
 

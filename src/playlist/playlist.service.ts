@@ -54,25 +54,8 @@ export class PlaylistService {
 
     async addPlaylistToCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
 
-        const user = await this.userModel.findById(uId)
-        const playlist = await this.playlistModel.findById(pId)
-
-        try {
-            if (!user.playlists.find(p => p.toString() === pId.toString())) {
-                if (!user.playlistsCollection.find(p => p.toString() === pId.toString())) {
-                    await user.updateOne({$addToSet: {playlistsCollection: pId}})
-                    await playlist.updateOne({$inc: {favorites: 1}})
-
-                    return 'Playlist add into your collection successfully'
-                } else {
-                    throw new HttpException(`You have this playlist already`, HttpStatus.BAD_REQUEST)
-                }
-            } else {
-                throw new HttpException(`You can't add your own playlist to your collection!`, HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
-        }
+        await this.playlistDirectionsInCollection(uId, pId, true)
+        return 'Playlist add into your collection successfully'
     }
 
     /*async dropAlbum(name, audio, image, uId, trackName): Promise<Playlist> {
@@ -106,21 +89,8 @@ export class PlaylistService {
 
     async removePlaylistFromCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
 
-        const user = await this.userModel.findById(uId)
-        const playlist = await this.playlistModel.findById(pId)
-
-        try {
-            if (user.playlistsCollection.find(p => p.toString() === pId.toString())) {
-                await user.updateOne({$pull: {playlistsCollection: pId}})
-                await playlist.updateOne({$inc: {favorites: -1}})
-
-                return 'Playlist remove from your collection successfully'
-            } else {
-                throw new HttpException(`You have not playlist in your collection!`, HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
-        }
+        await this.playlistDirectionsInCollection(uId, pId, false)
+        return 'Playlist remove from your collection successfully'
     }
 
     async deletePlaylist(uId: ObjectId, pId: ObjectId): Promise<any> {
@@ -137,7 +107,7 @@ export class PlaylistService {
                     }
                 })
 
-                await this.trackModel.find().updateMany({_id: [...playlist.tracks.map(id => id.toString())]}, {$inc: {favorites: -1}}) // rewrite
+                await this.trackModel.find().updateMany({_id: [...playlist.tracks.map(id => id.toString())]}, {$inc: {favorites: -1}})
 
                 this.fileService.removeFile(playlist.image, 'playlist', playlist.user.username)
                 playlist.deleteOne()
@@ -145,6 +115,34 @@ export class PlaylistService {
                 return 'Playlist deleted successfully'
             } else {
                 throw new HttpException(`Permission denied`, HttpStatus.FORBIDDEN)
+            }
+        } catch (e) {
+            throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    private async playlistDirectionsInCollection(uId: ObjectId, pId: ObjectId, add: boolean): Promise<any> {
+
+        const user = await this.userModel.findById(uId)
+        const playlist = await this.playlistModel.findById(pId)
+
+        try {
+            if(add) {
+                if (!user.playlistsCollection.find(p => p.toString() === pId.toString())) {
+                    await user.updateOne({$addToSet: {playlistsCollection: pId}})
+                    await playlist.updateOne({$inc: {favorites: 1}})
+                } else {
+                    throw new HttpException(`You have this playlist already`, HttpStatus.BAD_REQUEST)
+                }
+            }
+
+            if(!add) {
+                if (user.playlistsCollection.find(p => p.toString() === pId.toString())) {
+                    await user.updateOne({$pull: {playlistsCollection: pId}})
+                    await playlist.updateOne({$inc: {favorites: -1}})
+                } else {
+                    throw new HttpException(`You have not playlist in your collection!`, HttpStatus.BAD_REQUEST)
+                }
             }
         } catch (e) {
             throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
