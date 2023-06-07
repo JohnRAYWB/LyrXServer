@@ -2,18 +2,17 @@ import {
     Body,
     Controller,
     Delete,
-    Get, HttpException, HttpStatus,
+    Get,
     Param,
     Post,
     Query,
     Request,
-    UploadedFile, UploadedFiles,
+    UploadedFile,
     UseInterceptors
 } from "@nestjs/common";
 import {PlaylistService} from "./playlist.service";
 import {ObjectId} from "mongoose";
-import {FileFieldsInterceptor, FileInterceptor} from "@nestjs/platform-express";
-import {Roles} from "../role/role.guard";
+import {FileInterceptor} from "@nestjs/platform-express";
 
 @Controller('playlists')
 export class PlaylistController {

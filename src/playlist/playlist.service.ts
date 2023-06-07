@@ -126,10 +126,10 @@ export class PlaylistService {
     async deletePlaylist(uId: ObjectId, pId: ObjectId): Promise<any> {
 
         const user = await this.userModel.findById(uId).populate('roles')
-        const playlist = await this.playlistModel.findById(pId)
+        const playlist = await this.playlistModel.findById(pId).populate('user')
 
         try {
-            if (uId.toString() === playlist.user.toString() || user.roles.find(r => r.role === 'admin')) {
+            if (uId === playlist.user['id'] || user.roles.find(r => r.role === 'admin')) {
                 await this.userModel.find().updateMany({}, {
                     $pullAll: {
                         playlists: [playlist],
@@ -137,9 +137,9 @@ export class PlaylistService {
                     }
                 })
 
-                await this.trackModel.find().updateMany({['id']: [...playlist.tracks]}, {$inc: {favorites: -1}}) // rewrite
+                await this.trackModel.find().updateMany({_id: [...playlist.tracks.map(id => id.toString())]}, {$inc: {favorites: -1}}) // rewrite
 
-                this.fileService.removeFile(playlist.image, 'playlist', user.username)
+                this.fileService.removeFile(playlist.image, 'playlist', playlist.user.username)
                 playlist.deleteOne()
 
                 return 'Playlist deleted successfully'

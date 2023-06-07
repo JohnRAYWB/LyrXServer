@@ -19,10 +19,10 @@ export class Track {
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
     artist: User
 
-    @Prop()
+    @Prop({default: 0})
     listens: number
 
-    @Prop()
+    @Prop({default: 0})
     favorites: number
 
     @Prop()

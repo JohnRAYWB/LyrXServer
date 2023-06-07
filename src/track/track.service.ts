@@ -51,7 +51,7 @@ export class TrackService {
         const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
         const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
 
-        const track = await this.trackModel.create({...dto, artist: user['id'], listens: 0, favorites: 0, audio: audioFile, image: imageFile})
+        const track = await this.trackModel.create({...dto, artist: user['id'], audio: audioFile, image: imageFile})
         await user.updateOne({$addToSet: {tracks: track['id']}})
 
         return track
@@ -60,50 +60,19 @@ export class TrackService {
     async incrementTrackListens(tId: ObjectId): Promise<any> {
 
         await this.trackModel.findByIdAndUpdate(tId, {$inc: {listens: 1}})
-
         return 'Thanks for listening this song'
     }
 
     async addTrackToCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
 
-        const track = await this.trackModel.findById(tId)
-        const user = await this.userModel.findById(uId)
-
-        try {
-            if(!user.tracksCollection.find(t => t.toString() === tId.toString())) {
-                await track.updateOne({$inc: {favorites: 1}})
-                await user.updateOne({$addToSet: {tracksCollection: track['id']}})
-
-                return 'Track add to your collection successfully'
-            } else {
-                throw new HttpException('You already has this track in your collection', HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
-        }
+        await this.trackDirectionsInCollection(uId, tId, true)
+        return 'Track add to your collection successfully'
     }
 
     async addTrackToPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
 
-        const track = await this.trackModel.findById(tId)
-        const playlist = await this.playlistModel.findById(pId)
-
-        try {
-            if(playlist.user.toString() === uId.toString()) {
-                if(!playlist.tracks.find(t => t.toString() === tId.toString())) {
-                    await playlist.updateOne({$addToSet: {tracks: tId}})
-                    await track.updateOne({$inc: {favorites: 1}})
-
-                    return 'Track add to your playlist successfully'
-                } else {
-                    throw new HttpException(`Playlist include this track already`, HttpStatus.FORBIDDEN)
-                }
-            } else {
-                throw new HttpException(`It's not your playlist`, HttpStatus.FORBIDDEN)
-            }
-        } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
-        }
+        await this.trackDirectionsInPlaylist(uId, tId, pId, true)
+        return 'Track add to your playlist successfully'
     }
 
     async addComment(uId, dto: createCommentDto): Promise<any> {
@@ -178,38 +147,14 @@ export class TrackService {
 
     async editTrackAudio(uId: ObjectId, tId: ObjectId, audio): Promise<any> {
 
-        const track = await this.trackModel.findById(tId).populate('artist')
-
-        try {
-            if(track && track.artist['id'] === uId) {
-                const audioFile = this.fileService.updateFile(track.audio, audio, FileType.AUDIO, 'track', track.artist.username)
-                await track.updateOne({$set: {audio: audioFile}})
-
-                return 'Audio successfully updated'
-            } else {
-                throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
-        }
+        await this.editTrackFile(uId, tId, audio, 'audio')
+        return 'Audio successfully updated'
     }
 
     async editTrackImage(uId: ObjectId, tId: ObjectId, image): Promise<any> {
 
-        const track = await this.trackModel.findById(tId).populate('artist')
-
-        try {
-            if(track && track.artist['id'] === uId) {
-                const imageFile = this.fileService.updateFile(track.image, image, FileType.IMAGE, 'track', track.artist.username)
-                await track.updateOne({$set: {image: imageFile}})
-
-                return 'Image successfully updated'
-            } else {
-                throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
-        }
+        await this.editTrackFile(uId, tId, image, 'image')
+        return 'Image successfully updated'
     }
 
     async editCommentById(uId: ObjectId, tId: ObjectId, text: string): Promise<any> {
@@ -231,44 +176,14 @@ export class TrackService {
 
     async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
 
-        const track = await this.trackModel.findById(tId)
-        const user = await this.userModel.findById(uId)
-
-        try {
-            if(user.tracksCollection.find(t => t.toString() === tId.toString())) {
-                await track.updateOne({$inc: {favorites: -1}})
-                await user.updateOne({$pull: {tracksCollection: track['id']}})
-
-                return 'Track remove from your collection successfully'
-            } else {
-                throw new HttpException(`You have not this track in your collection`, HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
-        }
+        await this.trackDirectionsInCollection(uId, tId, false)
+        return 'Track remove from your collection successfully'
     }
 
     async removeTrackFromPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
 
-        const track = await this.trackModel.findById(tId)
-        const playlist = await this.playlistModel.findById(pId)
-
-        try {
-            if(playlist.user.toString() === uId.toString()) {
-                if(playlist.tracks.find(t => t.toString() === tId.toString())) {
-                    await playlist.updateOne({$pull: {tracks: tId}})
-                    await track.updateOne({$inc: {favorites: -1}})
-
-                    return 'Track remove from your playlist successfully'
-                } else {
-                    throw new HttpException(`Playlist not include this track`, HttpStatus.FORBIDDEN)
-                }
-            } else {
-                throw new HttpException(`It's not your playlist`, HttpStatus.FORBIDDEN)
-            }
-        } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
-        }
+        await this.trackDirectionsInPlaylist(uId, tId, pId, false)
+        return 'Track remove from your playlist successfully'
     }
 
     async deleteCommentById(uId: ObjectId, tId: ObjectId): Promise<any> {
@@ -314,5 +229,88 @@ export class TrackService {
         }
 
         return 'Track successfully deleted'
+    }
+
+    private async trackDirectionsInCollection(uId: ObjectId, tId: ObjectId, add: boolean): Promise<any> {
+
+        const track = await this.trackModel.findById(tId)
+        const user = await this.userModel.findById(uId)
+
+        try {
+            if(add) {
+                if(!user.tracksCollection.find(t => t.toString() === tId.toString())) {
+                    await track.updateOne({$inc: {favorites: 1}})
+                    await user.updateOne({$addToSet: {tracksCollection: track['id']}})
+                } else {
+                    throw new HttpException('You already has this track in your collection', HttpStatus.BAD_REQUEST)
+                }
+            }
+
+            if(!add) {
+                if(user.tracksCollection.find(t => t.toString() === tId.toString())) {
+                    await track.updateOne({$inc: {favorites: -1}})
+                    await user.updateOne({$pull: {tracksCollection: track['id']}})
+                } else {
+                    throw new HttpException(`You have not this track in your collection`, HttpStatus.BAD_REQUEST)
+                }
+            }
+        } catch (e) {
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    private async trackDirectionsInPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId, add: boolean): Promise<any> {
+
+        const track = await this.trackModel.findById(tId)
+        const playlist = await this.playlistModel.findById(pId)
+
+        try {
+            if(playlist.user.toString() === uId.toString()) {
+                if(add) {
+                    if(!playlist.tracks.find(t => t.toString() === tId.toString())) {
+                        await playlist.updateOne({$addToSet: {tracks: tId}})
+                        await track.updateOne({$inc: {favorites: 1}})
+                    } else {
+                        throw new HttpException(`Playlist include this track already`, HttpStatus.FORBIDDEN)
+                    }
+                }
+
+                if(!add) {
+                    if(playlist.tracks.find(t => t.toString() === tId.toString())) {
+                        await playlist.updateOne({$pull: {tracks: tId}})
+                        await track.updateOne({$inc: {favorites: -1}})
+                    } else {
+                        throw new HttpException(`Playlist not include this track`, HttpStatus.FORBIDDEN)
+                    }
+                }
+            } else {
+                throw new HttpException(`It's not your playlist`, HttpStatus.FORBIDDEN)
+            }
+        } catch (e) {
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+        }
+    }
+
+    private async editTrackFile(uId: ObjectId, tId: ObjectId, file, type): Promise<any> {
+
+        const track = await this.trackModel.findById(tId).populate('artist')
+
+        try {
+            if(track && track.artist['id'] === uId) {
+                if(type === 'audio') {
+                    const audioFile = this.fileService.updateFile(track.audio, file, FileType.AUDIO, 'track', track.artist.username)
+                    await track.updateOne({$set: {audio: audioFile}})
+                }
+
+                if(type === 'image') {
+                    const imageFile = this.fileService.updateFile(track.image, file, FileType.IMAGE, 'track', track.artist.username)
+                    await track.updateOne({$set: {image: imageFile}})
+                }
+            } else {
+                throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+        }
     }
 }
