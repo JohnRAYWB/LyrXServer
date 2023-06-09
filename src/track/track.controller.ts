@@ -29,7 +29,7 @@ export class TrackController {
         return this.trackService.getAllTracks()
     }
 
-    @Get(':id')
+    @Get(':id/current')
     getTrackById(@Param('id') tId: ObjectId) {
         return this.trackService.getTrackById(tId)
     }

@@ -26,12 +26,12 @@ export class PlaylistController {
         return this.playlistService.getAllPlaylists()
     }
 
-    @Get(':id')
+    @Get(':id/current')
     getPlaylistById(@Param('id') pId: ObjectId) {
         return this.playlistService.getPlaylistById(pId)
     }
 
-    @Get('search')
+    @Get('/search')
     searchPlaylistByName(@Query('name') name: string) {
         return this.playlistService.searchPlaylistByName(name)
     }
@@ -41,21 +41,6 @@ export class PlaylistController {
     createPlaylist(@Request() req, @UploadedFile() image, @Body('name') name: string) {
         return this.playlistService.createPlaylist(req.user['id'], name, image)
     }
-
-    /*@Roles('artist')
-    @Post('drop')
-    @UseInterceptors(FileFieldsInterceptor([
-        {name: 'image', maxCount: 1},
-        {name: 'audio', maxCount: 20}
-    ]))
-    dropAlbum(@Request() req, @UploadedFiles() files, @Body('name') name: string, @Body('trackName') trackName: [string]) {
-        const {audio, image} = files
-        if(audio.length === trackName.length) {
-            return this.playlistService.dropAlbum(name, audio, image[0], req.user['id'], trackName)
-        } else {
-            throw new HttpException('You forgot add audio or track name. Please check one more time', HttpStatus.BAD_REQUEST)
-        }
-    }*/
 
     @Post('add/:id')
     addPlaylistToCollection(@Request() req, @Param('id') pId: ObjectId) {

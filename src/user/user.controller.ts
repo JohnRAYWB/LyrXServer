@@ -23,7 +23,7 @@ export class UserController {
     }
 
     @Get('search')
-    searchUserByName(@Query('query') username: string) {
+    searchUserByName(@Query('username') username: string) {
         return this.userService.searchUserByName(username)
     }
 

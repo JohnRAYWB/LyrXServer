@@ -8,6 +8,7 @@ import {TrackModule} from "./track/track.module";
 import {FileModule} from "./file/file.module";
 import * as path from "path";
 import {PlaylistModule} from "./playlist/playlist.module";
+import {AlbumModule} from "./album/album.module";
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import {PlaylistModule} from "./playlist/playlist.module";
       AuthModule,
       TrackModule,
       PlaylistModule,
+      AlbumModule,
       FileModule
   ],
   controllers: [],

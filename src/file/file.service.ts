@@ -30,6 +30,23 @@ export class FileService {
         }
     }
 
+    copyFile(file, type, currentRoute, newRoute, entity) {
+
+        const fileName = uuid.v4() + '.' + file.split('.').pop()
+
+        const source = path.resolve(__dirname, '..', 'static', currentRoute, entity, file)
+        const destinationCheck = path.resolve(__dirname, '..', 'static', newRoute, entity, type)
+        const destination = path.resolve(__dirname, '..', 'static', newRoute, entity, type, fileName)
+
+        if(!fs.existsSync(destinationCheck)) {
+            fs.mkdirSync(destinationCheck, {recursive: true})
+        }
+
+        fs.copyFileSync(source, destination)
+
+        return type + '/' + fileName
+    }
+
     moveFile(file, type, route, currentEntity, destinationEntity?) {
 
         const destination = path.resolve(__dirname, '..', 'static', route, destinationEntity, type)

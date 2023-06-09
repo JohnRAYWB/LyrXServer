@@ -58,31 +58,6 @@ export class PlaylistService {
         return 'Playlist add into your collection successfully'
     }
 
-    /*async dropAlbum(name, audio, image, uId, trackName): Promise<Playlist> {
-
-        const user = await this.userModel.findById(uId)
-        const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'album', user.username)
-        const playlist = await this.playlistModel.create({name: name, user: user['id'], favorites: 0, image: imagePath})
-
-        const audioPath = audio.map(audio => this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username))
-
-        for(let i = 0; i < audioPath.length; i++) {
-            if(i === audioPath.length - 1) {
-                user.albums.push(playlist['id'])
-            }
-
-            const track = await this.trackModel.create({name: trackName[i], artist: user['id'], listens: 0, favorites: 0, audio: audioPath[i], image: playlist.image})
-
-            playlist.tracks.push(track['id'])
-            user.tracks.push(track['id'])
-
-            await playlist.save()
-            user.save()
-        }
-
-        return playlist
-    }*/
-
     async removeTrackFromPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
         return this.trackService.removeTrackFromPlaylist(uId, tId, pId)
     }
