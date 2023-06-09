@@ -20,7 +20,7 @@ export class Album extends Playlist{
     /*@Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Genre'}]})
     genre: Genre*/ // <- think about it
 
-    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]})
+    @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
     artist: User
 }
 

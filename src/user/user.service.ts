@@ -11,16 +11,20 @@ import {Track} from "../track/schema/track.schema";
 import {TrackService} from "../track/track.service";
 import {PlaylistService} from "../playlist/playlist.service";
 import {Playlist} from "../playlist/schema/playlist.schema";
+import {AlbumService} from "../album/album.service";
 
 @Injectable()
 export class UserService {
+
+    private userException = (e) => new HttpException(`User service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
 
     constructor(
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         private roleService: RoleService,
         private fileService: FileService,
         private trackService: TrackService,
-        private playlistService: PlaylistService
+        private playlistService: PlaylistService,
+        private albumService: AlbumService
     ) {
     }
 
@@ -87,7 +91,7 @@ export class UserService {
 
             return 'Your info changed successfully'
         } catch (e) {
-            throw new HttpException('User service: Something goes wrong', HttpStatus.BAD_REQUEST)
+            throw this.userException(e)
         }
     }
 
@@ -111,7 +115,7 @@ export class UserService {
 
             return 'Your bDay update successfully'
         } catch (e) {
-            throw new HttpException(`User service: You cannot do this right now. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+            throw this.userException(e)
         }
     }
 
@@ -129,7 +133,7 @@ export class UserService {
                 throw new HttpException('User has this role already', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`User service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+            throw this.userException(e)
         }
     }
 
@@ -146,7 +150,7 @@ export class UserService {
                 throw new HttpException('User has ban already', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`User service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+            throw this.userException(e)
         }
     }
 
@@ -163,7 +167,7 @@ export class UserService {
                 throw new HttpException(`User hasn't banned`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`User service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+            throw this.userException(e)
         }
     }
 
@@ -173,5 +177,9 @@ export class UserService {
 
     async removePlaylistFromCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
         return this.playlistService.removePlaylistFromCollection(uId, pId)
+    }
+
+    async removeAlbumFromCollection(uId: ObjectId, aId: ObjectId): Promise<any> {
+        return this.albumService.removeAlbumFromCollection(uId, aId)
     }
 }

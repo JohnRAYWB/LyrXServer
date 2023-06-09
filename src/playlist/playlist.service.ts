@@ -10,6 +10,8 @@ import {TrackService} from "../track/track.service";
 @Injectable()
 export class PlaylistService {
 
+    private playlistException = (e) => new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+
     constructor(
         @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
         @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
@@ -92,7 +94,7 @@ export class PlaylistService {
                 throw new HttpException(`Permission denied`, HttpStatus.FORBIDDEN)
             }
         } catch (e) {
-            throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+            throw this.playlistException(e)
         }
     }
 
@@ -120,7 +122,7 @@ export class PlaylistService {
                 }
             }
         } catch (e) {
-            throw new HttpException(`Playlist service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+            throw this.playlistException(e)
         }
     }
 }

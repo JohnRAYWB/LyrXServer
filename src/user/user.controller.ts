@@ -85,4 +85,9 @@ export class UserController {
     removePlaylistFromCollection(@Request() req, @Param('id') pId: ObjectId) {
         return this.userService.removePlaylistFromCollection(req.user['id'], pId)
     }
+
+    @Post('profile/album/remove/:id')
+    removeAlbumFromCollection(@Request() req, @Param('id') aId: ObjectId) {
+        return this.userService.removeAlbumFromCollection(req.user['id'], aId)
+    }
 }

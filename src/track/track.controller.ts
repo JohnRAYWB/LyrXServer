@@ -60,7 +60,7 @@ export class TrackController {
         return this.trackService.addTrackToCollection(req.user['id'], tId)
     }
 
-    @Post('playlist/add/:id')
+    @Post('playlist/:id/add')
     addTrackToPlaylist(@Request() req, @Param('id') tId: ObjectId, @Body('playlist') pId: ObjectId) {
         return this.trackService.addTrackToPlaylist(req.user['id'], tId, pId)
     }
@@ -106,7 +106,7 @@ export class TrackController {
         return this.trackService.removeTrackFromCollection(req.user['id'], tId)
     }
 
-    @Post('playlist/remove/:id')
+    @Post('playlist/:id/remove')
     removeTrackFromPlaylist(@Request() req, @Param('id') tId: ObjectId, @Body('playlist') pId: ObjectId) {
         return this.trackService.removeTrackFromPlaylist(req.user['id'], tId, pId)
     }

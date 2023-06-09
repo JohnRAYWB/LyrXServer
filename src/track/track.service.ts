@@ -14,6 +14,8 @@ import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
 @Injectable()
 export class TrackService {
 
+    private trackException = (e) => new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+
     constructor(
        @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
        @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
@@ -91,7 +93,7 @@ export class TrackService {
                 throw new HttpException(`You are banned. Ban reason: ${user.banReason}`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw this.trackException(e)
         }
 
     }
@@ -116,7 +118,7 @@ export class TrackService {
             }
 
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw this.trackException(e)
         }
     }
 
@@ -141,7 +143,7 @@ export class TrackService {
                 throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw this.trackException(e)
         }
     }
 
@@ -170,7 +172,7 @@ export class TrackService {
                 throw new HttpException(`Not your comment`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw this.trackException(e)
         }
     }
 
@@ -203,7 +205,7 @@ export class TrackService {
                 throw new HttpException(`Not your comment`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw this.trackException(e)
         }
     }
 
@@ -212,20 +214,24 @@ export class TrackService {
         const track = await this.trackModel.findById(tId).populate('artist')
 
         try {
-            await this.userModel.find().populate('comments').updateMany({}, {$pullAll: {
-                    comments: [...track.comments],
-                    tracks: [track],
-                    tracksCollection: [track]
-                }})
-            await this.playlistModel.find().updateMany({}, {$pullAll: {tracks: [track]}})
-            await this.commentModel.deleteMany({track: track})
+            if(!track.protectedDeletion) {
+                await this.userModel.find().populate('comments').updateMany({}, {$pullAll: {
+                        comments: [...track.comments],
+                        tracks: [track],
+                        tracksCollection: [track]
+                    }})
+                await this.playlistModel.find().updateMany({}, {$pullAll: {tracks: [track]}})
+                await this.commentModel.deleteMany({track: track})
 
-            this.fileService.removeFile(track.audio, 'track', track.artist.username)
-            this.fileService.removeFile(track.image, 'track', track.artist.username)
+                this.fileService.removeFile(track.audio, 'track', track.artist.username)
+                this.fileService.removeFile(track.image, 'track', track.artist.username)
 
-            track.deleteOne()
+                track.deleteOne()
+            } else {
+                throw new HttpException('Permission denied: Track has protection. You can delete it only from album', HttpStatus.BAD_REQUEST)
+            }
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw this.trackException(e)
         }
 
         return 'Track successfully deleted'
@@ -255,7 +261,7 @@ export class TrackService {
                 }
             }
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+            throw this.trackException(e)
         }
     }
 
@@ -287,7 +293,7 @@ export class TrackService {
                 throw new HttpException(`It's not your playlist`, HttpStatus.FORBIDDEN)
             }
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+            throw this.trackException(e)
         }
     }
 
@@ -310,7 +316,7 @@ export class TrackService {
                 throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
-            throw new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
+            throw this.trackException(e)
         }
     }
 }

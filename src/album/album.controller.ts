@@ -1,6 +1,6 @@
 import {
     Body,
-    Controller, Get,
+    Controller, Delete, Get,
     HttpException,
     HttpStatus, Param, Patch,
     Post, Query,
@@ -50,13 +50,33 @@ export class AlbumController {
         }
     }
 
-    @Patch('add/:id')
+    @Post('add/:id')
+    addAlbumToCollection(@Request() req, @Param('id') aId: ObjectId) {
+        return this.albumService.addAlbumToCollection(req.user['id'], aId)
+    }
+
+    @Patch('track/:id/add')
     addTrackToAlbum(@Request() req, @Param('id') aId: ObjectId, @Body('track') tId: ObjectId) {
         return this.albumService.addTrackToAlbum(req.user['id'], tId, aId)
     }
 
-    @Patch('remove/:id')
+    @Post('remove/:id')
+    removeAlbumFromCollection(@Request() req, @Param('id') aId: ObjectId) {
+        return this.albumService.removeAlbumFromCollection(req.user['id'], aId)
+    }
+
+    @Patch('track/:id/remove')
     removeTrackFromAlbum(@Request() req, @Param('id') aId: ObjectId, @Body('track') tId: ObjectId) {
         return this.albumService.removeTrackFromAlbum(req.user['id'], tId, aId)
+    }
+
+    @Delete('track/:id/delete')
+    deleteTrack(@Request() req, @Param('id') tId: ObjectId) {
+        return this.albumService.deleteTrack(req.user['id'], tId)
+    }
+
+    @Delete(':id')
+    deleteAlbum(@Request() req, @Param('id') aId: ObjectId) {
+        return this.albumService.deleteAlbum(req.user['id'], aId)
     }
 }

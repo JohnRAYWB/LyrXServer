@@ -47,7 +47,7 @@ export class PlaylistController {
         return this.playlistService.addPlaylistToCollection(req.user['id'], pId)
     }
 
-    @Post(':id/remove')
+    @Post('track/:id/remove')
     removeTrackFromPlaylist(@Request() req, @Param('id') pId: ObjectId, @Body('track') tId: ObjectId) {
         return this.playlistService.removeTrackFromPlaylist(req.user['id'], tId, pId)
     }
