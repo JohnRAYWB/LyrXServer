@@ -8,7 +8,6 @@ import {createTrackDto} from "./dto/create.track.dto";
 import {createCommentDto} from "./dto/create.comment.dto";
 import {User, UserDocument} from "../user/schema/user.schema";
 import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
-import {editTrackArtistDto} from "./dto/edit.track.artist.dto";
 import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
 
 @Injectable()
@@ -122,14 +121,14 @@ export class TrackService {
         }
     }
 
-    async editTrackArtist(tId: ObjectId, dto: editTrackArtistDto): Promise<any> {
+    async editTrackArtist(uId: ObjectId, tId: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(tId).populate('artist')
         const trackOwner = await this.userModel.findById(track.artist['id']).populate('tracks')
-        const newOwner = await this.userModel.findById(dto.artist)
+        const newOwner = await this.userModel.findById(uId)
 
         try {
-            if(newOwner && newOwner['id'] !== trackOwner['id']) {
+            if(!track.protectedDeletion && newOwner && newOwner['id'] !== trackOwner['id']) {
 
                 this.fileService.moveFile(track.audio,'audio', 'track', trackOwner.username, newOwner.username)
                 this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, newOwner.username)

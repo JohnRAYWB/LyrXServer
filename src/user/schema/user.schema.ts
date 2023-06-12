@@ -36,6 +36,12 @@ export class User {
     @Prop()
     banReason: String[]
 
+    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]})
+    followers: User[]
+
+    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]})
+    followings: User[]
+
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Role'}]})
     roles: Role[]
 
@@ -56,6 +62,9 @@ export class User {
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Album'}]})
     albums: Album[]
+
+    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Album'}]})
+    albumsCollection: Album[]
 }
 
 export const UserSchema = SchemaFactory.createForClass(User)

@@ -4,7 +4,6 @@ import {User, UserDocument} from "./schema/user.schema";
 import {Model, ObjectId} from "mongoose";
 import {RoleService} from "../role/role.service";
 import {createUserDto} from "./dto/create.user.dto";
-import {addRoleDto} from "./dto/add.role.dto";
 import {birthDto} from "./dto/birth.dto";
 import {FileService, FileType} from "../file/file.service";
 import {Track} from "../track/schema/track.schema";
@@ -12,6 +11,7 @@ import {TrackService} from "../track/track.service";
 import {PlaylistService} from "../playlist/playlist.service";
 import {Playlist} from "../playlist/schema/playlist.schema";
 import {AlbumService} from "../album/album.service";
+import {Album} from "../album/schema/album.schema";
 
 @Injectable()
 export class UserService {
@@ -38,7 +38,6 @@ export class UserService {
     async getUserByName(username: string): Promise<User> {
 
         const user = await this.userModel.findOne({username: username})
-            .populate(['roles', 'tracksCollection', 'comments'])
 
         return user
     }
@@ -46,8 +45,13 @@ export class UserService {
     async getUserByEmail(email: string): Promise<User> {
 
         const user = await this.userModel.findOne({email: email})
-            .populate(['roles', 'tracksCollection', 'comments'])
 
+        return user
+    }
+
+    async getUserById(uId: ObjectId): Promise<User> {
+
+        const user = await this.userModel.findById(uId)
         return user
     }
 
@@ -64,16 +68,20 @@ export class UserService {
 
         const user = await this.userModel.findById(uId).populate(['tracks', 'tracksCollection'])
         const {tracks, tracksCollection} = user
+        const collection = [].concat(tracks, tracksCollection)
 
-        return [...tracks, ...tracksCollection]
+        return collection
     }
 
-    async getOwnPlaylists(uId: ObjectId): Promise<Playlist[]> {
+    async getOwnPlaylists(uId: ObjectId): Promise<Playlist[] | Album []> {
 
-        const user = await this.userModel.findById(uId).populate(['playlists', 'playlistsCollection'])
-        const {playlists, playlistsCollection} = user
+        const user = await this.userModel.findById(uId).populate([
+            'playlists', 'playlistsCollection', 'albums', 'albumsCollection'
+        ])
+        const {playlists, playlistsCollection, albums, albumsCollection} = user
+        const collections = [].concat(playlists, playlistsCollection, albums, albumsCollection)
 
-        return [...playlists, ...playlistsCollection]
+        return collections
     }
 
     async createUser(dto: createUserDto): Promise<User> {
@@ -119,56 +127,40 @@ export class UserService {
         }
     }
 
-    async addRole(dto: addRoleDto): Promise<any> {
+    async addRole(uId: ObjectId, rName: string): Promise<any> {
 
-        const role = await this.roleService.getRole(dto.role)
-        const user = await this.userModel.findById(dto.uId)
+        await this.roleControl(uId, rName, true)
+        return 'Role add successfully'
+    }
 
-        try {
-            if (!user.roles.find(r => r.toString() === role['id'])) {
-                await user.updateOne({$addToSet: {roles: role['id']}})
+    async removeRole(uId: ObjectId, rName: string): Promise<any> {
 
-                return 'Role add successfully'
-            } else {
-                throw new HttpException('User has this role already', HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw this.userException(e)
-        }
+        await this.roleControl(uId, rName, false)
+        return 'Role remove successfully'
     }
 
     async banUser(uId: ObjectId, banReason: string): Promise<any> {
 
-        const user = await this.userModel.findById(uId)
-
-        try {
-            if (!user.ban) {
-                await user.updateOne({$set: {ban: true}, $push: {banReason: banReason}})
-
-                return 'User banned successfully'
-            } else {
-                throw new HttpException('User has ban already', HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw this.userException(e)
-        }
+        await this.banControl(uId, true, banReason)
+        return 'User banned successfully'
     }
 
     async unbanUser(uId: ObjectId): Promise<any> {
 
-        const user = await this.userModel.findById(uId)
+        await this.banControl(uId, false)
+        return 'User unbanned successfully'
+    }
 
-        try {
-            if(user.ban) {
-                await user.updateOne({$set: {ban: false}})
+    async subscribe(uId: ObjectId, sId: ObjectId): Promise<any> {
 
-                return 'User unbanned successfully'
-            } else {
-                throw new HttpException(`User hasn't banned`, HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw this.userException(e)
-        }
+        await this.subscribeControl(uId, sId, true)
+        return 'Thanks for subscribe'
+    }
+
+    async unsubscribe(uId: ObjectId, sId: ObjectId): Promise<any> {
+
+        await this.subscribeControl(uId, sId, false)
+        return 'You are unsubscribed successfully'
     }
 
     async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
@@ -181,5 +173,86 @@ export class UserService {
 
     async removeAlbumFromCollection(uId: ObjectId, aId: ObjectId): Promise<any> {
         return this.albumService.removeAlbumFromCollection(uId, aId)
+    }
+
+    private async roleControl(uId: ObjectId, rName: string, add: boolean): Promise<any> {
+
+        const user = await this.userModel.findById(uId).populate('roles')
+        const role = await this.roleService.getRole(rName)
+
+        try {
+            if (add) {
+                if (!user.roles.find(r => r.role === rName)) {
+                    await user.updateOne({$addToSet: {roles: role['id']}})
+                } else {
+                    throw new HttpException('User has this role already', HttpStatus.BAD_REQUEST)
+                }
+            }
+
+            if (!add) {
+                if (user.roles.find(r => r.role === rName)) {
+                    await user.updateOne({$pull: {roles: role['id']}})
+                } else {
+                    throw new HttpException('User has not this role', HttpStatus.BAD_REQUEST)
+                }
+            }
+
+        } catch (e) {
+            throw this.userException(e)
+        }
+    }
+
+    private async banControl(uId: ObjectId, add: boolean, banReason?: string): Promise<any> {
+
+        const user = await this.userModel.findById(uId)
+
+        try {
+            if (add) {
+                if (!user.ban) {
+                    await user.updateOne({$set: {ban: true}, $push: {banReason: banReason}})
+                } else {
+                    throw new HttpException('User has ban already', HttpStatus.BAD_REQUEST)
+                }
+            }
+
+            if (!add) {
+                if (user.ban) {
+                    await user.updateOne({$set: {ban: false}})
+                } else {
+                    throw new HttpException(`User hasn't banned`, HttpStatus.BAD_REQUEST)
+                }
+            }
+        } catch (e) {
+            throw this.userException(e)
+        }
+
+    }
+
+    private async subscribeControl(uId: ObjectId, sId: ObjectId, follow: boolean): Promise<any> {
+
+        const user = await this.userModel.findById(uId)
+        const subscriber = await this.userModel.findById(sId)
+
+        try {
+            if (follow) {
+                if (!subscriber.followings.find(f => f.toString() === uId.toString())) {
+                    await user.updateOne({$addToSet: {followers: sId}})
+                    await subscriber.updateOne({$addToSet: {followings: uId}})
+                } else {
+                    throw new HttpException('You are follow this user already', HttpStatus.BAD_REQUEST)
+                }
+            }
+
+            if (!follow) {
+                if (subscriber.followings.find(f => f.toString() === uId.toString())) {
+                    await user.updateOne({$pull: {followers: sId}})
+                    await subscriber.updateOne({$pull: {followings: uId}})
+                } else {
+                    throw new HttpException('You are not follow this user', HttpStatus.BAD_REQUEST)
+                }
+            }
+        } catch (e) {
+            this.userException(e)
+        }
     }
 }

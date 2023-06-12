@@ -155,7 +155,7 @@ export class AlbumService {
                 album.tracks.map(async track => await this.deleteTrack(uId, track['id']))
                 await this.userModel.find().updateMany({}, {
                     $pullAll: {
-                        playlistsCollection: [album],
+                        albumsCollection: [album],
                         albums: [album]
                     }
                 })
@@ -214,8 +214,8 @@ export class AlbumService {
 
         try {
             if (add) {
-                if (!user.playlistsCollection.find(p => p.toString() === aId.toString())) {
-                    await user.updateOne({$addToSet: {playlistsCollection: aId}})
+                if (!user.albumsCollection.find(p => p.toString() === aId.toString())) {
+                    await user.updateOne({$addToSet: {albumsCollection: aId}})
                     await album.updateOne({$inc: {favorites: 1}})
                 } else {
                     throw new HttpException('You have this album already', HttpStatus.BAD_REQUEST)
@@ -223,8 +223,8 @@ export class AlbumService {
             }
 
             if (!add) {
-                if (user.playlistsCollection.find(p => p.toString() === aId.toString())) {
-                    await user.updateOne({$pull: {playlistsCollection: aId}})
+                if (user.albumsCollection.find(p => p.toString() === aId.toString())) {
+                    await user.updateOne({$pull: {albumsCollection: aId}})
                     await album.updateOne({$inc: {favorites: -1}})
                 } else {
                     throw new HttpException('You have not this album yet', HttpStatus.BAD_REQUEST)

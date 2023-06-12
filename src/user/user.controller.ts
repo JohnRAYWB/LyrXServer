@@ -1,6 +1,5 @@
 import {Body, Controller, Get, Param, Post, Query, Request, UploadedFile, UseInterceptors} from "@nestjs/common";
 import {UserService} from "./user.service";
-import {addRoleDto} from "./dto/add.role.dto";
 import {Roles} from "../role/role.guard";
 import {birthDto} from "./dto/birth.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
@@ -11,15 +10,20 @@ export class UserController {
 
     constructor(private userService: UserService) {}
 
+    @Get('profile')
+    getProfile(@Request() req) {
+        return this.userService.getUserByEmail(req.user.email)
+    }
+
     @Roles('admin')
     @Get()
     getUsers() {
         return this.userService.getAllUsers()
     }
 
-    @Get('profile/:username')
-    getUserByName(@Param('username') username: string) {
-        return this.userService.getUserByName(username)
+    @Get('profile/:id')
+    getUserById(@Param('id') uId: ObjectId) {
+        return this.userService.getUserById(uId)
     }
 
     @Get('search')
@@ -27,17 +31,12 @@ export class UserController {
         return this.userService.searchUserByName(username)
     }
 
-    @Get('profile')
-    getProfile(@Request() req) {
-        return this.userService.getUserByEmail(req.user.email)
-    }
-
-    @Post('profile/collection')
+    @Get('collection')
     getOwnCollection(@Request() req) {
         return this.userService.getOwnCollection(req.user['id'])
     }
 
-    @Post('profile/playlists')
+    @Get('playlists')
     getOwnPlaylists(@Request() req) {
         return this.userService.getOwnPlaylists(req.user['id'])
     }
@@ -59,9 +58,15 @@ export class UserController {
     }
 
     @Roles('admin')
-    @Post('role')
-    addRole(@Body() dto: addRoleDto) {
-        return this.userService.addRole(dto)
+    @Post('role/:id/add')
+    addRole(@Param('id') uId: ObjectId, @Body('role') rName: string) {
+        return this.userService.addRole(uId, rName)
+    }
+
+    @Roles('admin')
+    @Post('role/:id/remove')
+    removeRole(@Param('id') uId: ObjectId, @Body('role') rName: string) {
+        return this.userService.removeRole(uId, rName)
     }
 
     @Roles('admin')
@@ -76,17 +81,27 @@ export class UserController {
         return this.userService.unbanUser(uId)
     }
 
-    @Post('profile/collection/remove/:id')
+    @Post('subscribe/:id')
+    subscribe(@Request() req, @Param('id') uId: ObjectId) {
+        return this.userService.subscribe(uId, req.user['id'])
+    }
+
+    @Post('unsubscribe/:id')
+    unsubscribe(@Request() req, @Param('id') uId: ObjectId) {
+        return this.userService.unsubscribe(uId, req.user['id'])
+    }
+
+    @Post('collection/remove/:id')
     removeTrackFromCollection(@Request() req, @Param('id') tId: ObjectId) {
         return this.userService.removeTrackFromCollection(req.user['id'], tId)
     }
 
-    @Post('profile/playlists/remove/:id')
+    @Post('playlists/remove/:id')
     removePlaylistFromCollection(@Request() req, @Param('id') pId: ObjectId) {
         return this.userService.removePlaylistFromCollection(req.user['id'], pId)
     }
 
-    @Post('profile/album/remove/:id')
+    @Post('album/remove/:id')
     removeAlbumFromCollection(@Request() req, @Param('id') aId: ObjectId) {
         return this.userService.removeAlbumFromCollection(req.user['id'], aId)
     }

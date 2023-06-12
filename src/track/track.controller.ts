@@ -17,7 +17,6 @@ import {Roles} from "../role/role.guard";
 import {ObjectId} from "mongoose";
 import {createCommentDto} from "./dto/create.comment.dto";
 import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
-import {editTrackArtistDto} from "./dto/edit.track.artist.dto";
 
 @Controller('tracks')
 export class TrackController {
@@ -78,8 +77,8 @@ export class TrackController {
 
     @Roles('admin')
     @Patch(':id/artist')
-    editTrackArtist(@Param('id') tId: ObjectId, @Body() dto: editTrackArtistDto) {
-        return this.trackService.editTrackArtist(tId, dto)
+    editTrackArtist(@Param('id') tId: ObjectId, @Body('artist') uId: ObjectId) {
+        return this.trackService.editTrackArtist(uId, tId)
     }
 
     @Roles('artist')
@@ -116,7 +115,7 @@ export class TrackController {
         return this.trackService.deleteCommentById(req.user['id'], tId)
     }
 
-    @Roles('admin')
+    @Roles('admin', 'artist')
     @Delete(':id')
     deleteTrackById(@Param('id') tId: ObjectId) {
         return this.trackService.deleteTrackById(tId)
