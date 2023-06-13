@@ -3,6 +3,7 @@ import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
 import {User} from "../../user/schema/user.schema";
 import * as mongoose from "mongoose";
 import {Playlist} from "../../playlist/schema/playlist.schema";
+import {Genre} from "../../genre/schema/genre.schema";
 
 export type AlbumDocument = HydratedDocument<Album>
 
@@ -17,8 +18,8 @@ export class Album extends Playlist{
     @Prop()
     description: string
 
-    /*@Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Genre'}]})
-    genre: Genre*/ // <- think about it
+    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Genre'}]})
+    genre: Genre[]
 
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
     artist: User

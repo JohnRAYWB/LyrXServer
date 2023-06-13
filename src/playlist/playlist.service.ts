@@ -6,6 +6,7 @@ import {FileService, FileType} from "../file/file.service";
 import {User, UserDocument} from "../user/schema/user.schema";
 import {Track, TrackDocument} from "../track/schema/track.schema";
 import {TrackService} from "../track/track.service";
+import {GenreService} from "../genre/genre.service";
 
 @Injectable()
 export class PlaylistService {
@@ -17,6 +18,7 @@ export class PlaylistService {
         @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         private trackService: TrackService,
+        private genreService: GenreService,
         private fileService: FileService
     ) {}
 
@@ -54,10 +56,22 @@ export class PlaylistService {
         return playlist
     }
 
+    async addGenre(uId: ObjectId, pId: ObjectId, gId: ObjectId): Promise<any> {
+
+        await this.genreControl(uId, pId, gId, true)
+        return 'Genre add successfully'
+    }
+
     async addPlaylistToCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
 
         await this.playlistDirectionsInCollection(uId, pId, true)
         return 'Playlist add into your collection successfully'
+    }
+
+    async removeGenre(uId: ObjectId, pId: ObjectId, gId: ObjectId): Promise<any> {
+
+        await this.genreControl(uId, pId, gId, false)
+        return 'Genre remove successfully'
     }
 
     async removeTrackFromPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
@@ -92,6 +106,36 @@ export class PlaylistService {
                 return 'Playlist deleted successfully'
             } else {
                 throw new HttpException(`Permission denied`, HttpStatus.FORBIDDEN)
+            }
+        } catch (e) {
+            throw this.playlistException(e)
+        }
+    }
+
+    private async genreControl(uId: ObjectId, pId: ObjectId, gId: ObjectId, add: boolean) {
+
+        const user = await this.userModel.findById(uId).populate('roles')
+        const playlist = await this.playlistModel.findById(pId)
+
+        try {
+            if(playlist.user.toString() === uId.toString() || user.roles.find(r => r.role === 'admin')) {
+                if(add) {
+                    if(!playlist.genre.find(g => g.toString() === gId.toString())) {
+                        await this.genreService.addEntityToGenre(gId, pId, 'playlist')
+                        await playlist.updateOne({$addToSet: {genre: gId}})
+                    } else {
+                        throw new HttpException('Playlist has this genre already', HttpStatus.BAD_REQUEST)
+                    }
+                }
+
+                if(!add) {
+                    if(playlist.genre.find(g => g.toString() === gId.toString())) {
+                        await this.genreService.removeEntityFromGenre(gId, pId, 'playlist')
+                        await playlist.updateOne({$pull: {genre: gId}})
+                    } else {
+                        throw new HttpException('Playlist has not this genre', HttpStatus.BAD_REQUEST)
+                    }
+                }
             }
         } catch (e) {
             throw this.playlistException(e)

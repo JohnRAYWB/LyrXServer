@@ -44,7 +44,7 @@ export class UserService {
 
     async getUserByEmail(email: string): Promise<User> {
 
-        const user = await this.userModel.findOne({email: email})
+        const user = await this.userModel.findOne({email: email}).populate('roles')
 
         return user
     }
@@ -52,7 +52,7 @@ export class UserService {
     async getUserById(uId: ObjectId): Promise<User> {
 
         const user = await this.userModel.findById(uId).populate([
-            'tracks', 'tracksCollection', 'playlists', 'playlistsCollection', 'albums', 'albumsCollection', 'followers', 'followings'
+            'tracks', 'tracksCollection', 'playlists', 'playlistsCollection', 'albums', 'albumsCollection', 'followers', 'followings', 'roles'
         ])
         return user
     }

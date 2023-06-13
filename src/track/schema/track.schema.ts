@@ -3,8 +3,8 @@ import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
 import {User} from "../../user/schema/user.schema";
 import * as mongoose from "mongoose";
 import {Comment} from "./comment.schema";
-import {Playlist} from "../../playlist/schema/playlist.schema";
 import {Album} from "../../album/schema/album.schema";
+import {Genre} from "../../genre/schema/genre.schema";
 
 export type TrackDocument = HydratedDocument<Track>
 
@@ -37,6 +37,9 @@ export class Track {
 
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'Album'})
     album: Album
+
+    @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Genre'}]})
+    genre: Genre[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}]})
     comments: Comment[]

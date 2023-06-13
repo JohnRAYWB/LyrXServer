@@ -9,6 +9,7 @@ import {createAlbumDto} from "./dto/create.album.dto";
 import {TrackService} from "../track/track.service";
 import {Comment, CommentDocument} from "../track/schema/comment.schema";
 import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
+import {GenreService} from "../genre/genre.service";
 
 @Injectable()
 export class AlbumService {
@@ -22,6 +23,7 @@ export class AlbumService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
         private trackService: TrackService,
+        private genreService: GenreService,
         private fileService: FileService
     ) {
     }
@@ -85,6 +87,12 @@ export class AlbumService {
 
     }
 
+    async addGenre(uId: ObjectId, aId: ObjectId, gId: ObjectId): Promise<any> {
+
+        await this.genreControl(uId, aId, gId, true)
+        return 'Genre add successfully'
+    }
+
     async addTrackToAlbum(uId: ObjectId, tId: ObjectId, aId: ObjectId): Promise<any> {
 
         await this.trackDirectionsInAlbum(uId, tId, aId, true)
@@ -95,6 +103,12 @@ export class AlbumService {
 
         await this.albumDirectionsInCollection(uId, aId, true)
         return 'Album add successfully'
+    }
+
+    async removeGenre(uId: ObjectId, aId: ObjectId, gId: ObjectId): Promise<any> {
+
+        await this.genreControl(uId, aId, gId, false)
+        return 'Genre remove successfully'
     }
 
     async removeTrackFromAlbum(uId: ObjectId, tId: ObjectId, aId: ObjectId): Promise<any> {
@@ -166,6 +180,36 @@ export class AlbumService {
                 return 'Album delete successfully'
             } else {
                 throw new HttpException('Permission denied', HttpStatus.FORBIDDEN)
+            }
+        } catch (e) {
+            throw this.albumException(e)
+        }
+    }
+
+    private async genreControl(uId: ObjectId, aId: ObjectId, gId: ObjectId, add: boolean) {
+
+        const user = await this.userModel.findById(uId).populate('roles')
+        const album = await this.albumModel.findById(aId)
+
+        try {
+            if(album.artist.toString() === uId.toString() || user.roles.find(r => r.role === 'admin')) {
+                if(add) {
+                    if(!album.genre.find(g => g.toString() === gId.toString())) {
+                        await this.genreService.addEntityToGenre(gId, aId, 'album')
+                        await album.updateOne({$addToSet: {genre: gId}})
+                    } else {
+                        throw new HttpException('Album has this genre already', HttpStatus.BAD_REQUEST)
+                    }
+                }
+
+                if(!add) {
+                    if(album.genre.find(g => g.toString() === gId.toString())) {
+                        await this.genreService.removeEntityFromGenre(gId, aId, 'album')
+                        await album.updateOne({$pull: {genre: gId}})
+                    } else {
+                        throw new HttpException('Album has not this genre', HttpStatus.BAD_REQUEST)
+                    }
+                }
             }
         } catch (e) {
             throw this.albumException(e)

@@ -50,6 +50,11 @@ export class AlbumController {
         }
     }
 
+    @Post('genre/:id/add')
+    addGenre(@Request() req, @Param('id') aId: ObjectId, @Body('genre') gId: ObjectId) {
+        return this.albumService.addGenre(req.user['id'], aId, gId)
+    }
+
     @Post('add/:id')
     addAlbumToCollection(@Request() req, @Param('id') aId: ObjectId) {
         return this.albumService.addAlbumToCollection(req.user['id'], aId)
@@ -58,6 +63,11 @@ export class AlbumController {
     @Patch('track/:id/add')
     addTrackToAlbum(@Request() req, @Param('id') aId: ObjectId, @Body('track') tId: ObjectId) {
         return this.albumService.addTrackToAlbum(req.user['id'], tId, aId)
+    }
+
+    @Post('genre/:id/remove')
+    removeGenre(@Request() req, @Param('id') aId: ObjectId, @Body('genre') gId: ObjectId) {
+        return this.albumService.removeGenre(req.user['id'], aId, gId)
     }
 
     @Post('remove/:id')

@@ -49,6 +49,11 @@ export class TrackController {
         return this.trackService.createTrack(req.user['id'], dto, audio[0], image[0])
     }
 
+    @Post('genre/:id/add')
+    addGenre(@Request() req, @Param('id') tId: ObjectId, @Body('genre') gId: ObjectId) {
+        return this.trackService.addGenre(req.user['id'], tId, gId)
+    }
+
     @Post('listens/:id')
     incrementListens(@Param('id') tId: ObjectId) {
         return this.trackService.incrementTrackListens(tId)
@@ -98,6 +103,11 @@ export class TrackController {
     @Patch('comment/:id')
     editCommentById(@Request() req, @Param('id') tId: ObjectId, @Body('text') text: string) {
         return this.trackService.editCommentById(req.user['id'], tId, text)
+    }
+
+    @Post('genre/:id/remove')
+    removeGenre(@Request() req, @Param('id') tId: ObjectId, @Body('genre') gId: ObjectId) {
+        return this.trackService.removeGenre(req.user['id'], tId, gId)
     }
 
     @Post('remove/:id')

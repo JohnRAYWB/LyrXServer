@@ -7,6 +7,7 @@ import {TrackService} from "./track.service";
 import {FileService} from "../file/file.service";
 import {User, UserSchema} from "../user/schema/user.schema";
 import {Playlist, PlaylistSchema} from "../playlist/schema/playlist.schema";
+import {GenreModule} from "../genre/genre.module";
 
 @Module({
     imports: [
@@ -14,6 +15,7 @@ import {Playlist, PlaylistSchema} from "../playlist/schema/playlist.schema";
         MongooseModule.forFeature([{name: Playlist.name, schema: PlaylistSchema}]),
         MongooseModule.forFeature([{name: Comment.name, schema: CommentSchema}]),
         MongooseModule.forFeature([{name: User.name, schema: UserSchema}]),
+        GenreModule
     ],
     controllers: [TrackController],
     providers: [

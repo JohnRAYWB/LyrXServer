@@ -9,6 +9,7 @@ import {FileModule} from "./file/file.module";
 import * as path from "path";
 import {PlaylistModule} from "./playlist/playlist.module";
 import {AlbumModule} from "./album/album.module";
+import {GenreModule} from "./genre/genre.module";
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import {AlbumModule} from "./album/album.module";
       TrackModule,
       PlaylistModule,
       AlbumModule,
+      GenreModule,
       FileModule
   ],
   controllers: [],

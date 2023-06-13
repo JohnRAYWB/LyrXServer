@@ -42,9 +42,19 @@ export class PlaylistController {
         return this.playlistService.createPlaylist(req.user['id'], name, image)
     }
 
+    @Post('genre/:id/add')
+    addGenre(@Request() req, @Param('id') pId: ObjectId, @Body('genre') gId: ObjectId) {
+        return this.playlistService.addGenre(req.user['id'], pId, gId)
+    }
+
     @Post('add/:id')
     addPlaylistToCollection(@Request() req, @Param('id') pId: ObjectId) {
         return this.playlistService.addPlaylistToCollection(req.user['id'], pId)
+    }
+
+    @Post('genre/:id/remove')
+    removeGenre(@Request() req, @Param('id') pId: ObjectId, @Body('genre') gId: ObjectId) {
+        return this.playlistService.removeGenre(req.user['id'], pId, gId)
     }
 
     @Post('track/:id/remove')

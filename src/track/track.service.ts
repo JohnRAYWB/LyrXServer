@@ -9,6 +9,7 @@ import {createCommentDto} from "./dto/create.comment.dto";
 import {User, UserDocument} from "../user/schema/user.schema";
 import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
 import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
+import {GenreService} from "../genre/genre.service";
 
 @Injectable()
 export class TrackService {
@@ -20,6 +21,7 @@ export class TrackService {
        @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
        @InjectModel(User.name) private userModel: Model<UserDocument>,
        @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
+       private genreService: GenreService,
        private fileService: FileService,
     ) {}
 
@@ -58,6 +60,12 @@ export class TrackService {
         await user.updateOne({$addToSet: {tracks: track['id']}})
 
         return track
+    }
+
+    async addGenre(uId: ObjectId, tId: ObjectId, gId: ObjectId): Promise<any> {
+
+        await this.genreControl(uId, tId, gId, true)
+        return 'Genre add successfully'
     }
 
     async incrementTrackListens(tId: ObjectId): Promise<any> {
@@ -177,6 +185,12 @@ export class TrackService {
         }
     }
 
+    async removeGenre(uId: ObjectId, tId: ObjectId, gId: ObjectId): Promise<any> {
+
+        await this.genreControl(uId, tId, gId, false)
+        return 'Genre remove successfully'
+    }
+
     async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
 
         await this.trackDirectionsInCollection(uId, tId, false)
@@ -236,6 +250,36 @@ export class TrackService {
         }
 
         return 'Track successfully deleted'
+    }
+
+    private async genreControl(uId: ObjectId, tId: ObjectId, gId: ObjectId, add: boolean) {
+
+        const user = await this.userModel.findById(uId).populate('roles')
+        const track = await this.trackModel.findById(tId)
+
+        try {
+            if(track.artist.toString() === uId.toString() || user.roles.find(r => r.role === 'admin')) {
+                if(add) {
+                    if(!track.genre.find(g => g.toString() === gId.toString())) {
+                        await this.genreService.addEntityToGenre(gId, tId, 'track')
+                        await track.updateOne({$addToSet: {genre: gId}})
+                    } else {
+                        throw new HttpException('Track has this genre already', HttpStatus.BAD_REQUEST)
+                    }
+                }
+
+                if(!add) {
+                    if(track.genre.find(g => g.toString() === gId.toString())) {
+                        await this.genreService.removeEntityFromGenre(gId, tId, 'track')
+                        await track.updateOne({$pull: {genre: gId}})
+                    } else {
+                        throw new HttpException('Track has not this genre', HttpStatus.BAD_REQUEST)
+                    }
+                }
+            }
+        } catch (e) {
+            throw this.trackException(e)
+        }
     }
 
     private async trackDirectionsInCollection(uId: ObjectId, tId: ObjectId, add: boolean): Promise<any> {
