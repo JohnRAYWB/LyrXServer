@@ -32,7 +32,9 @@ export class TrackService {
 
     async getTrackById(tId: ObjectId): Promise<Track> {
 
-        const track = await this.trackModel.findById(tId).populate('comments').populate('artist')
+        const track = await this.trackModel.findById(tId).populate([
+            'artist', 'comments', 'albums'
+        ])
 
         return track
     }
@@ -41,7 +43,7 @@ export class TrackService {
 
         const track = await this.trackModel.find({
             name: {$regex: new RegExp(name, 'i')}
-        }).populate('artist')
+        })
 
         return track
     }

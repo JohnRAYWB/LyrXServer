@@ -64,6 +64,17 @@ export class UserController {
     }
 
     @Roles('admin')
+    @Post('unban/:id')
+    unbanUser(@Param('id') uId: ObjectId) {
+        return this.userService.unbanUser(uId)
+    }
+
+    @Post('subscribe/:id')
+    subscribe(@Request() req, @Param('id') uId: ObjectId) {
+        return this.userService.subscribe(uId, req.user['id'])
+    }
+
+    @Roles('admin')
     @Post('role/:id/remove')
     removeRole(@Param('id') uId: ObjectId, @Body('role') rName: string) {
         return this.userService.removeRole(uId, rName)
@@ -73,17 +84,6 @@ export class UserController {
     @Post('ban/:id')
     banUser(@Param('id') uId: ObjectId, @Body('reason') banReason: string) {
         return this.userService.banUser(uId, banReason)
-    }
-
-    @Roles('admin')
-    @Post('unban/:id')
-    unbanUser(@Param('id') uId: ObjectId) {
-        return this.userService.unbanUser(uId)
-    }
-
-    @Post('subscribe/:id')
-    subscribe(@Request() req, @Param('id') uId: ObjectId) {
-        return this.userService.subscribe(uId, req.user['id'])
     }
 
     @Post('unsubscribe/:id')

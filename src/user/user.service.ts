@@ -51,7 +51,9 @@ export class UserService {
 
     async getUserById(uId: ObjectId): Promise<User> {
 
-        const user = await this.userModel.findById(uId)
+        const user = await this.userModel.findById(uId).populate([
+            'tracks', 'tracksCollection', 'playlists', 'playlistsCollection', 'albums', 'albumsCollection', 'followers', 'followings'
+        ])
         return user
     }
 
@@ -59,7 +61,7 @@ export class UserService {
 
         const userList = await this.userModel.find({
             username: {$regex: new RegExp(username, 'i')}
-        }).populate(['roles', 'tracksCollection', 'comments'])
+        })
 
         return userList
     }

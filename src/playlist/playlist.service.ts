@@ -29,7 +29,7 @@ export class PlaylistService {
 
     async getPlaylistById(pId: ObjectId): Promise<Playlist> {
 
-        const playlist = await this.playlistModel.findById(pId).populate('tracks')
+        const playlist = await this.playlistModel.findById(pId).populate(['user', 'tracks'])
 
         return playlist
     }
