@@ -6,7 +6,6 @@ import {User, UserDocument} from "../user/schema/user.schema";
 import {Track, TrackDocument} from "../track/schema/track.schema";
 import {FileService, FileType} from "../file/file.service";
 import {createAlbumDto} from "./dto/create.album.dto";
-import {TrackService} from "../track/track.service";
 import {Comment, CommentDocument} from "../track/schema/comment.schema";
 import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
 import {GenreService} from "../genre/genre.service";
@@ -24,7 +23,6 @@ export class AlbumService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
         @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
-        private trackService: TrackService,
         private genreService: GenreService,
         private fileService: FileService
     ) {
@@ -97,13 +95,13 @@ export class AlbumService {
 
     async addTrackToAlbum(uId: ObjectId, tId: ObjectId, aId: ObjectId): Promise<any> {
 
-        await this.trackDirectionsInAlbum(uId, tId, aId, true)
+        await this.trackControl(uId, tId, aId, true)
         return 'Track add successfully'
     }
 
     async addAlbumToCollection(uId: ObjectId, aId: ObjectId): Promise<any> {
 
-        await this.albumDirectionsInCollection(uId, aId, true)
+        await this.albumCollectionControl(uId, aId, true)
         return 'Album add successfully'
     }
 
@@ -115,13 +113,13 @@ export class AlbumService {
 
     async removeTrackFromAlbum(uId: ObjectId, tId: ObjectId, aId: ObjectId): Promise<any> {
 
-        await this.trackDirectionsInAlbum(uId, tId, aId, false)
+        await this.trackControl(uId, tId, aId, false)
         return 'Track removed successfully'
     }
 
     async removeAlbumFromCollection(uId: ObjectId, aId: ObjectId): Promise<any> {
 
-        await this.albumDirectionsInCollection(uId, aId, false)
+        await this.albumCollectionControl(uId, aId, false)
         return 'Album remove successfully'
     }
 
@@ -184,7 +182,7 @@ export class AlbumService {
         }
     }
 
-    private async trackDirectionsInAlbum(uId: ObjectId, tId: ObjectId, aId: ObjectId, add: boolean): Promise<any> {
+    private async trackControl(uId: ObjectId, tId: ObjectId, aId: ObjectId, add: boolean): Promise<any> {
 
         const user = await this.userModel.findById(uId).populate('roles')
         const track = await this.trackModel.findById(tId)
@@ -219,7 +217,7 @@ export class AlbumService {
         }
     }
 
-    private async albumDirectionsInCollection(uId: ObjectId, aId: ObjectId, add: boolean): Promise<any> {
+    private async albumCollectionControl(uId: ObjectId, aId: ObjectId, add: boolean): Promise<any> {
 
         const user = await this.userModel.findById(uId)
         const album = await this.albumModel.findById(aId)

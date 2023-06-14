@@ -90,19 +90,4 @@ export class UserController {
     unsubscribe(@Request() req, @Param('id') uId: ObjectId) {
         return this.userService.unsubscribe(uId, req.user['id'])
     }
-
-    @Post('collection/remove/:id')
-    removeTrackFromCollection(@Request() req, @Param('id') tId: ObjectId) {
-        return this.userService.removeTrackFromCollection(req.user['id'], tId)
-    }
-
-    @Post('playlists/remove/:id')
-    removePlaylistFromCollection(@Request() req, @Param('id') pId: ObjectId) {
-        return this.userService.removePlaylistFromCollection(req.user['id'], pId)
-    }
-
-    @Post('album/remove/:id')
-    removeAlbumFromCollection(@Request() req, @Param('id') aId: ObjectId) {
-        return this.userService.removeAlbumFromCollection(req.user['id'], aId)
-    }
 }

@@ -16,7 +16,7 @@ export class GenreController {
         return this.genreService.getAllGenres()
     }
 
-    @Get()
+    @Get(':id')
     getGenresById(@Param('id') gId: ObjectId) {
         return this.genreService.getGenreById(gId)
     }

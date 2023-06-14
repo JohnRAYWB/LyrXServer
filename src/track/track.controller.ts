@@ -59,7 +59,7 @@ export class TrackController {
         return this.trackService.incrementTrackListens(tId)
     }
 
-    @Post('add/:id')
+    @Post('collection/:id/add')
     addTrackToCollection(@Request() req, @Param('id') tId: ObjectId) {
         return this.trackService.addTrackToCollection(req.user['id'], tId)
     }
@@ -75,32 +75,32 @@ export class TrackController {
     }
 
     @Roles('artist')
-    @Patch(':id/description')
+    @Patch('current/:id/description')
     editTrackDescription(@Request() req, @Param('id') tId: ObjectId, @Body() dto: editTrackDescriptionDto) {
         return this.trackService.editTrackDescription(req.user['id'], tId, dto)
     }
 
     @Roles('admin')
-    @Patch(':id/artist')
+    @Patch('current/:id/artist')
     editTrackArtist(@Param('id') tId: ObjectId, @Body('artist') uId: ObjectId) {
         return this.trackService.editTrackArtist(uId, tId)
     }
 
     @Roles('artist')
-    @Patch(':id/audio')
+    @Patch('current/:id/audio')
     @UseInterceptors(FileInterceptor('audio'))
     editTrackAudio(@Request() req, @Param('id') tId: ObjectId, @UploadedFile() audio) {
         return this.trackService.editTrackAudio(req.user['id'], tId, audio)
     }
 
     @Roles('artist')
-    @Patch(':id/image')
+    @Patch('current/:id/image')
     @UseInterceptors(FileInterceptor('image'))
     editTrackImage(@Request() req, @Param('id') tId: ObjectId, @UploadedFile() image) {
         return this.trackService.editTrackImage(req.user['id'], tId, image)
     }
 
-    @Patch('comment/:id')
+    @Patch('comment/:id/edit')
     editCommentById(@Request() req, @Param('id') tId: ObjectId, @Body('text') text: string) {
         return this.trackService.editCommentById(req.user['id'], tId, text)
     }
@@ -110,7 +110,7 @@ export class TrackController {
         return this.trackService.removeGenre(req.user['id'], tId, gId)
     }
 
-    @Post('remove/:id')
+    @Post('collection/:id/remove')
     removeTrackFromCollection(@Request() req, @Param('id') tId: ObjectId) {
         return this.trackService.removeTrackFromCollection(req.user['id'], tId)
     }
@@ -120,7 +120,7 @@ export class TrackController {
         return this.trackService.removeTrackFromPlaylist(req.user['id'], tId, pId)
     }
 
-    @Delete('comment/:id')
+    @Delete('comment/:id/delete')
     deleteCommentById(@Request() req, @Param('id') tId: ObjectId) {
         return this.trackService.deleteCommentById(req.user['id'], tId)
     }

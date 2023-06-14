@@ -57,7 +57,7 @@ export class AlbumController {
         return this.albumService.addGenre(req.user['id'], aId, gId)
     }
 
-    @Post('add/:id')
+    @Post('collection/:id/add')
     addAlbumToCollection(@Request() req, @Param('id') aId: ObjectId) {
         return this.albumService.addAlbumToCollection(req.user['id'], aId)
     }
@@ -72,7 +72,7 @@ export class AlbumController {
         return this.albumService.removeGenre(req.user['id'], aId, gId)
     }
 
-    @Post('remove/:id')
+    @Post('collection/:id/remove')
     removeAlbumFromCollection(@Request() req, @Param('id') aId: ObjectId) {
         return this.albumService.removeAlbumFromCollection(req.user['id'], aId)
     }

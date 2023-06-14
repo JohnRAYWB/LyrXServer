@@ -8,7 +8,6 @@ import {User, UserSchema} from "../user/schema/user.schema";
 import {Comment, CommentSchema} from "../track/schema/comment.schema";
 import {Playlist, PlaylistSchema} from "../playlist/schema/playlist.schema";
 import {FileService} from "../file/file.service";
-import {TrackModule} from "../track/track.module";
 import {GenreModule} from "../genre/genre.module";
 import {Genre, GenreSchema} from "../genre/schema/genre.schema";
 
@@ -20,7 +19,6 @@ import {Genre, GenreSchema} from "../genre/schema/genre.schema";
         MongooseModule.forFeature([{name: User.name, schema: UserSchema}]),
         MongooseModule.forFeature([{name: Comment.name, schema: CommentSchema}]),
         MongooseModule.forFeature([{name: Genre.name, schema: GenreSchema}]),
-        TrackModule,
         GenreModule
     ],
     controllers: [AlbumController],

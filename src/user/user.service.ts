@@ -7,10 +7,7 @@ import {createUserDto} from "./dto/create.user.dto";
 import {birthDto} from "./dto/birth.dto";
 import {FileService, FileType} from "../file/file.service";
 import {Track} from "../track/schema/track.schema";
-import {TrackService} from "../track/track.service";
-import {PlaylistService} from "../playlist/playlist.service";
 import {Playlist} from "../playlist/schema/playlist.schema";
-import {AlbumService} from "../album/album.service";
 import {Album} from "../album/schema/album.schema";
 
 @Injectable()
@@ -22,9 +19,6 @@ export class UserService {
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         private roleService: RoleService,
         private fileService: FileService,
-        private trackService: TrackService,
-        private playlistService: PlaylistService,
-        private albumService: AlbumService
     ) {
     }
 
@@ -163,18 +157,6 @@ export class UserService {
 
         await this.subscribeControl(uId, sId, false)
         return 'You are unsubscribed successfully'
-    }
-
-    async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
-        return this.trackService.removeTrackFromCollection(uId, tId)
-    }
-
-    async removePlaylistFromCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
-        return this.playlistService.removePlaylistFromCollection(uId, pId)
-    }
-
-    async removeAlbumFromCollection(uId: ObjectId, aId: ObjectId): Promise<any> {
-        return this.albumService.removeAlbumFromCollection(uId, aId)
     }
 
     private async roleControl(uId: ObjectId, rName: string, add: boolean): Promise<any> {

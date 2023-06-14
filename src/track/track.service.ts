@@ -78,13 +78,13 @@ export class TrackService {
 
     async addTrackToCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
 
-        await this.trackDirectionsInCollection(uId, tId, true)
+        await this.collectionControl(uId, tId, true)
         return 'Track add to your collection successfully'
     }
 
     async addTrackToPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
 
-        await this.trackDirectionsInPlaylist(uId, tId, pId, true)
+        await this.playlistControl(uId, tId, pId, true)
         return 'Track add to your playlist successfully'
     }
 
@@ -160,13 +160,13 @@ export class TrackService {
 
     async editTrackAudio(uId: ObjectId, tId: ObjectId, audio): Promise<any> {
 
-        await this.editTrackFile(uId, tId, audio, 'audio')
+        await this.editFileControl(uId, tId, audio, 'audio')
         return 'Audio successfully updated'
     }
 
     async editTrackImage(uId: ObjectId, tId: ObjectId, image): Promise<any> {
 
-        await this.editTrackFile(uId, tId, image, 'image')
+        await this.editFileControl(uId, tId, image, 'image')
         return 'Image successfully updated'
     }
 
@@ -195,13 +195,13 @@ export class TrackService {
 
     async removeTrackFromCollection(uId: ObjectId, tId: ObjectId): Promise<any> {
 
-        await this.trackDirectionsInCollection(uId, tId, false)
+        await this.collectionControl(uId, tId, false)
         return 'Track remove from your collection successfully'
     }
 
     async removeTrackFromPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
 
-        await this.trackDirectionsInPlaylist(uId, tId, pId, false)
+        await this.playlistControl(uId, tId, pId, false)
         return 'Track remove from your playlist successfully'
     }
 
@@ -246,7 +246,7 @@ export class TrackService {
 
                 track.deleteOne()
             } else {
-                throw new HttpException('Permission denied: Track has protection. You can delete it only from album', HttpStatus.BAD_REQUEST)
+                throw new HttpException('Permission denied: Track has protection.First remove it from album', HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
             throw this.trackException(e)
@@ -285,7 +285,7 @@ export class TrackService {
         }
     }
 
-    private async trackDirectionsInCollection(uId: ObjectId, tId: ObjectId, add: boolean): Promise<any> {
+    private async collectionControl(uId: ObjectId, tId: ObjectId, add: boolean): Promise<any> {
 
         const track = await this.trackModel.findById(tId)
         const user = await this.userModel.findById(uId)
@@ -313,7 +313,7 @@ export class TrackService {
         }
     }
 
-    private async trackDirectionsInPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId, add: boolean): Promise<any> {
+    private async playlistControl(uId: ObjectId, tId: ObjectId, pId: ObjectId, add: boolean): Promise<any> {
 
         const track = await this.trackModel.findById(tId)
         const playlist = await this.playlistModel.findById(pId)
@@ -345,7 +345,7 @@ export class TrackService {
         }
     }
 
-    private async editTrackFile(uId: ObjectId, tId: ObjectId, file, type): Promise<any> {
+    private async editFileControl(uId: ObjectId, tId: ObjectId, file, type): Promise<any> {
 
         const track = await this.trackModel.findById(tId).populate('artist')
 

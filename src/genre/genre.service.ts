@@ -28,7 +28,7 @@ export class GenreService {
 
     async getGenreById(gId: ObjectId): Promise<Genre> {
 
-        const genre = await this.genreModel.findById(gId)
+        const genre = await this.genreModel.findById(gId).populate(['tracks', 'playlists', 'albums'])
 
         return genre
     }

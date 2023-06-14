@@ -5,7 +5,6 @@ import {Model, ObjectId} from "mongoose";
 import {FileService, FileType} from "../file/file.service";
 import {User, UserDocument} from "../user/schema/user.schema";
 import {Track, TrackDocument} from "../track/schema/track.schema";
-import {TrackService} from "../track/track.service";
 import {GenreService} from "../genre/genre.service";
 import {Genre, GenreDocument} from "../genre/schema/genre.schema";
 
@@ -19,7 +18,6 @@ export class PlaylistService {
         @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
-        private trackService: TrackService,
         private genreService: GenreService,
         private fileService: FileService
     ) {}
@@ -66,7 +64,7 @@ export class PlaylistService {
 
     async addPlaylistToCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
 
-        await this.playlistDirectionsInCollection(uId, pId, true)
+        await this.playlistCollectionControl(uId, pId, true)
         return 'Playlist add into your collection successfully'
     }
 
@@ -76,13 +74,9 @@ export class PlaylistService {
         return 'Genre remove successfully'
     }
 
-    async removeTrackFromPlaylist(uId: ObjectId, tId: ObjectId, pId: ObjectId): Promise<any> {
-        return this.trackService.removeTrackFromPlaylist(uId, tId, pId)
-    }
-
     async removePlaylistFromCollection(uId: ObjectId, pId: ObjectId): Promise<any> {
 
-        await this.playlistDirectionsInCollection(uId, pId, false)
+        await this.playlistCollectionControl(uId, pId, false)
         return 'Playlist remove from your collection successfully'
     }
 
@@ -145,7 +139,7 @@ export class PlaylistService {
         }
     }
 
-    private async playlistDirectionsInCollection(uId: ObjectId, pId: ObjectId, add: boolean): Promise<any> {
+    private async playlistCollectionControl(uId: ObjectId, pId: ObjectId, add: boolean): Promise<any> {
 
         const user = await this.userModel.findById(uId)
         const playlist = await this.playlistModel.findById(pId)

@@ -5,7 +5,6 @@ import {Playlist, PlaylistSchema} from "./schema/playlist.schema";
 import {PlaylistController} from "./playlist.controller";
 import {FileService} from "../file/file.service";
 import {User, UserSchema} from "../user/schema/user.schema";
-import {TrackModule} from "../track/track.module";
 import {Track, TrackSchema} from "../track/schema/track.schema";
 import {GenreModule} from "../genre/genre.module";
 import {Genre, GenreSchema} from "../genre/schema/genre.schema";
@@ -16,7 +15,6 @@ import {Genre, GenreSchema} from "../genre/schema/genre.schema";
         MongooseModule.forFeature([{name: Track.name, schema: TrackSchema}]),
         MongooseModule.forFeature([{name: User.name, schema: UserSchema}]),
         MongooseModule.forFeature([{name: Genre.name, schema: GenreSchema}]),
-        TrackModule,
         GenreModule
     ],
     controllers: [PlaylistController],

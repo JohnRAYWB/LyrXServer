@@ -5,17 +5,11 @@ import {UserController} from "./user.controller";
 import {UserService} from "./user.service";
 import {RoleModule} from "../role/role.module";
 import {FileService} from "../file/file.service";
-import {TrackModule} from "../track/track.module";
-import {PlaylistModule} from "../playlist/playlist.module";
-import {AlbumModule} from "../album/album.module";
 
 @Module({
     imports: [
         MongooseModule.forFeature([{name: User.name, schema: UserSchema}]),
         RoleModule,
-        TrackModule,
-        PlaylistModule,
-        AlbumModule
     ],
     controllers: [UserController],
     providers: [

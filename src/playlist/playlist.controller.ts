@@ -47,7 +47,7 @@ export class PlaylistController {
         return this.playlistService.addGenre(req.user['id'], pId, gId)
     }
 
-    @Post('add/:id')
+    @Post('collection/:id/add')
     addPlaylistToCollection(@Request() req, @Param('id') pId: ObjectId) {
         return this.playlistService.addPlaylistToCollection(req.user['id'], pId)
     }
@@ -57,12 +57,7 @@ export class PlaylistController {
         return this.playlistService.removeGenre(req.user['id'], pId, gId)
     }
 
-    @Post('track/:id/remove')
-    removeTrackFromPlaylist(@Request() req, @Param('id') pId: ObjectId, @Body('track') tId: ObjectId) {
-        return this.playlistService.removeTrackFromPlaylist(req.user['id'], tId, pId)
-    }
-
-    @Post('remove/:id')
+    @Post('collection/:id/remove')
     removePlaylistFromCollection(@Request() req, @Param('id') pId: ObjectId) {
         return this.playlistService.removePlaylistFromCollection(req.user['id'], pId)
     }
