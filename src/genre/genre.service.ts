@@ -3,10 +3,9 @@ import {InjectModel} from "@nestjs/mongoose";
 import {Genre, GenreDocument} from "./schema/genre.schema";
 import {Model, ObjectId} from "mongoose";
 import {createGenreDto} from "./dto/create.genre.dto";
-import {UserService} from "../user/user.service";
-import {AlbumService} from "../album/album.service";
-import {PlaylistService} from "../playlist/playlist.service";
-import {TrackService} from "../track/track.service";
+import {Track, TrackDocument} from "../track/schema/track.schema";
+import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
+import {Album, AlbumDocument} from "../album/schema/album.schema";
 
 @Injectable()
 export class GenreService {
@@ -15,6 +14,9 @@ export class GenreService {
 
     constructor(
        @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
+       @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
+       @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
+       @InjectModel(Album.name) private albumModel: Model<AlbumDocument>,
     ) {}
 
     async getAllGenres(): Promise<Genre[]> {
@@ -62,8 +64,18 @@ export class GenreService {
         return 'Remove from genre successfully'
     }
 
-    async deleteGenre(): Promise<any> {
+    async deleteGenreById(gId: ObjectId): Promise<any> {
 
+        try {
+            await this.trackModel.find().updateMany({}, {$pull: {genre: gId}})
+            await this.playlistModel.find().updateMany({}, {$pull: {genre: gId}})
+            await this.albumModel.find().updateMany({}, {$pull: {genre: gId}})
+            await this.genreModel.findByIdAndDelete(gId)
+
+            return 'Genre delete successfully'
+        } catch (e) {
+            throw this.genreException(e)
+        }
     }
 
     private async entityDirectionsControl(gId: ObjectId, eId: ObjectId, entity: string, add: boolean): Promise<any> {

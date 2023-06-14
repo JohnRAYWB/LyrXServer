@@ -43,10 +43,12 @@ export class AlbumController {
     createAlbum(@Request() req, @UploadedFiles() files, @Body() dto: createAlbumDto) {
 
         const {audio, image} = files
-        if(audio.length === dto.trackName.length) {
-            return this.albumService.createAlbum(req.user['id'], dto, audio, image[0])
+        const trackNames = [].concat(dto.trackName)
+
+        if(audio.length === trackNames.length) {
+            return this.albumService.createAlbum(req.user['id'], {...dto, trackName: trackNames}, audio, image[0])
         } else {
-            throw new HttpException('You forgot add audio or track name. Please check one more time', HttpStatus.BAD_REQUEST)
+            throw new HttpException(`You forgot add audio or track name. Audio length: ${audio.length}; Tracks name length: ${trackNames.length}`, HttpStatus.BAD_REQUEST)
         }
     }
 
@@ -78,11 +80,6 @@ export class AlbumController {
     @Patch('track/:id/remove')
     removeTrackFromAlbum(@Request() req, @Param('id') aId: ObjectId, @Body('track') tId: ObjectId) {
         return this.albumService.removeTrackFromAlbum(req.user['id'], tId, aId)
-    }
-
-    @Delete('track/:id/delete')
-    deleteTrack(@Request() req, @Param('id') tId: ObjectId) {
-        return this.albumService.deleteTrack(req.user['id'], tId)
     }
 
     @Delete(':id')

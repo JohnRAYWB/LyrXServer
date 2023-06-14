@@ -1,4 +1,4 @@
-import {Body, Controller, Get, Param, Post, Request} from "@nestjs/common";
+import {Body, Controller, Delete, Get, Param, Post, Request} from "@nestjs/common";
 import {GenreService} from "./genre.service";
 import {createGenreDto} from "./dto/create.genre.dto";
 import {Roles} from "../role/role.guard";
@@ -25,5 +25,11 @@ export class GenreController {
     @Post()
     createGenre(@Body() dto: createGenreDto) {
         return this.genreService.createGenre(dto)
+    }
+
+    @Roles('admin')
+    @Delete(':id')
+    deleteGenreById(@Param('id') gId: ObjectId) {
+        return this.genreService.deleteGenreById(gId)
     }
 }

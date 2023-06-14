@@ -7,6 +7,7 @@ import {User, UserDocument} from "../user/schema/user.schema";
 import {Track, TrackDocument} from "../track/schema/track.schema";
 import {TrackService} from "../track/track.service";
 import {GenreService} from "../genre/genre.service";
+import {Genre, GenreDocument} from "../genre/schema/genre.schema";
 
 @Injectable()
 export class PlaylistService {
@@ -17,6 +18,7 @@ export class PlaylistService {
         @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
         @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
         @InjectModel(User.name) private userModel: Model<UserDocument>,
+        @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
         private trackService: TrackService,
         private genreService: GenreService,
         private fileService: FileService
@@ -98,6 +100,7 @@ export class PlaylistService {
                     }
                 })
 
+                await this.genreModel.find().updateMany({}, {$pullAll: {playlists: [playlist]}})
                 await this.trackModel.find().updateMany({_id: [...playlist.tracks.map(id => id.toString())]}, {$inc: {favorites: -1}})
 
                 this.fileService.removeFile(playlist.image, 'playlist', playlist.user.username)

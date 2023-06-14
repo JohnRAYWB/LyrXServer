@@ -10,6 +10,7 @@ import {User, UserDocument} from "../user/schema/user.schema";
 import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
 import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
 import {GenreService} from "../genre/genre.service";
+import {Genre, GenreDocument} from "../genre/schema/genre.schema";
 
 @Injectable()
 export class TrackService {
@@ -21,6 +22,7 @@ export class TrackService {
        @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
        @InjectModel(User.name) private userModel: Model<UserDocument>,
        @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
+       @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
        private genreService: GenreService,
        private fileService: FileService,
     ) {}
@@ -237,6 +239,7 @@ export class TrackService {
                     }})
                 await this.playlistModel.find().updateMany({}, {$pullAll: {tracks: [track]}})
                 await this.commentModel.deleteMany({track: track})
+                await this.genreModel.find().updateMany({}, {$pullAll: {tracks: [track]}})
 
                 this.fileService.removeFile(track.audio, 'track', track.artist.username)
                 this.fileService.removeFile(track.image, 'track', track.artist.username)

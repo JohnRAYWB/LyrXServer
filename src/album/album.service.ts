@@ -10,6 +10,7 @@ import {TrackService} from "../track/track.service";
 import {Comment, CommentDocument} from "../track/schema/comment.schema";
 import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
 import {GenreService} from "../genre/genre.service";
+import {Genre, GenreDocument} from "../genre/schema/genre.schema";
 
 @Injectable()
 export class AlbumService {
@@ -22,6 +23,7 @@ export class AlbumService {
         @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
         @InjectModel(User.name) private userModel: Model<UserDocument>,
         @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+        @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
         private trackService: TrackService,
         private genreService: GenreService,
         private fileService: FileService
@@ -123,57 +125,23 @@ export class AlbumService {
         return 'Album remove successfully'
     }
 
-    async deleteTrack(uId: ObjectId, tId: ObjectId): Promise<any> {
-
-        const user = await this.userModel.findById(uId).populate('roles')
-        const track = await this.trackModel.findById(tId).populate('artist')
-        const album = await this.albumModel.findById(track.album)
-
-        try {
-            if (album && track.protectedDeletion) {
-                if (user['id'] === track.artist['id'] || user.roles.find(r => r.role === 'admin')) {
-                    await this.userModel.find().populate('comments').updateMany({}, {
-                        $pullAll: {
-                            comments: [...track.comments],
-                            tracks: [track],
-                            tracksCollection: [track]
-                        }
-                    })
-                    await this.commentModel.find().deleteMany({track: track})
-                    await this.playlistModel.find().updateMany({}, {$pullAll: {tracks: [track]}})
-                    await album.updateOne({$pull: {tracks: track['id']}})
-
-                    this.fileService.removeFile(track.audio, 'track', track.artist.username)
-
-                    track.deleteOne()
-
-                    return 'Track deleted successfully'
-                } else {
-                    throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
-                }
-            } else {
-                throw new HttpException('Track has not album', HttpStatus.BAD_REQUEST)
-            }
-        } catch (e) {
-            throw this.albumException(e)
-        }
-    }
-
     async deleteAlbum(uId: ObjectId, aId: ObjectId): Promise<any> {
 
         const user = await this.userModel.findById(uId).populate('roles')
-        const album = await this.albumModel.findById(aId).populate('artist').populate('tracks')
+        const album = await this.albumModel.findById(aId).populate(['artist', 'tracks'])
 
         try {
             if (album.artist['id'] === user['id'] || user.roles.find(r => r.role === 'admin')) {
-                album.tracks.map(async track => await this.deleteTrack(uId, track['id']))
+                for(let track of album.tracks) {
+                    await this.removeTrackFromAlbum(uId, track['id'], aId)
+                }
                 await this.userModel.find().updateMany({}, {
                     $pullAll: {
                         albumsCollection: [album],
                         albums: [album]
                     }
                 })
-
+                await this.genreModel.find().updateMany({}, {$pullAll: {albums: [album]}})
                 this.fileService.removeFile(album.image, 'album', album.artist.username)
                 album.deleteOne()
 
@@ -218,12 +186,12 @@ export class AlbumService {
 
     private async trackDirectionsInAlbum(uId: ObjectId, tId: ObjectId, aId: ObjectId, add: boolean): Promise<any> {
 
-        const user = await this.userModel.findById(uId)
+        const user = await this.userModel.findById(uId).populate('roles')
         const track = await this.trackModel.findById(tId)
         const album = await this.albumModel.findById(aId)
 
         try {
-            if (track.artist.toString() === user['id'] && user.albums.find(a => a.toString() === aId.toString())) {
+            if (track.artist.toString() === uId.toString() || user.roles.find(r => r.role === 'admin')) {
                 if (add) {
                     if (!album.tracks.find(t => t.toString() === tId.toString())) {
                         this.fileService.removeFile(track.image, 'track', user.username)
