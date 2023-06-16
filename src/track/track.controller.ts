@@ -15,7 +15,6 @@ import {createTrackDto} from "./dto/create.track.dto";
 import {FileFieldsInterceptor, FileInterceptor} from "@nestjs/platform-express";
 import {Roles} from "../role/role.guard";
 import {ObjectId} from "mongoose";
-import {createCommentDto} from "./dto/create.comment.dto";
 import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
 
 @Controller('tracks')
@@ -51,7 +50,7 @@ export class TrackController {
 
     @Post('genre/:id/add')
     addGenre(@Request() req, @Param('id') tId: ObjectId, @Body('genre') gId: ObjectId) {
-        return this.trackService.addGenre(req.user['id'], tId, gId)
+        return this.trackService.addGenre(req.user.id, tId, gId)
     }
 
     @Post('listens/:id')
@@ -61,68 +60,68 @@ export class TrackController {
 
     @Post('collection/:id/add')
     addTrackToCollection(@Request() req, @Param('id') tId: ObjectId) {
-        return this.trackService.addTrackToCollection(req.user['id'], tId)
+        return this.trackService.addTrackToCollection(req.user.id, tId)
     }
 
     @Post('playlist/:id/add')
     addTrackToPlaylist(@Request() req, @Param('id') tId: ObjectId, @Body('playlist') pId: ObjectId) {
-        return this.trackService.addTrackToPlaylist(req.user['id'], tId, pId)
+        return this.trackService.addTrackToPlaylist(req.user.id, tId, pId)
     }
 
-    @Post('comment')
-    addComment(@Request() req, @Body() dto: createCommentDto) {
-        return this.trackService.addComment(req.user['id'], dto)
+    @Post('comment/:id')
+    addComment(@Request() req, @Param('id') tId: ObjectId, @Body('text') text: string) {
+        return this.trackService.addComment(req.user.id, tId, text)
     }
 
     @Roles('artist')
-    @Patch('current/:id/description')
+    @Patch(':id/current/description')
     editTrackDescription(@Request() req, @Param('id') tId: ObjectId, @Body() dto: editTrackDescriptionDto) {
-        return this.trackService.editTrackDescription(req.user['id'], tId, dto)
+        return this.trackService.editTrackDescription(req.user.id, tId, dto)
     }
 
     @Roles('admin')
-    @Patch('current/:id/artist')
+    @Patch(':id/current/artist')
     editTrackArtist(@Param('id') tId: ObjectId, @Body('artist') uId: ObjectId) {
         return this.trackService.editTrackArtist(uId, tId)
     }
 
     @Roles('artist')
-    @Patch('current/:id/audio')
+    @Patch(':id/current/audio')
     @UseInterceptors(FileInterceptor('audio'))
     editTrackAudio(@Request() req, @Param('id') tId: ObjectId, @UploadedFile() audio) {
-        return this.trackService.editTrackAudio(req.user['id'], tId, audio)
+        return this.trackService.editTrackAudio(req.user.id, tId, audio)
     }
 
     @Roles('artist')
-    @Patch('current/:id/image')
+    @Patch(':id/current/image')
     @UseInterceptors(FileInterceptor('image'))
     editTrackImage(@Request() req, @Param('id') tId: ObjectId, @UploadedFile() image) {
-        return this.trackService.editTrackImage(req.user['id'], tId, image)
+        return this.trackService.editTrackImage(req.user.id, tId, image)
     }
 
     @Patch('comment/:id/edit')
     editCommentById(@Request() req, @Param('id') tId: ObjectId, @Body('text') text: string) {
-        return this.trackService.editCommentById(req.user['id'], tId, text)
+        return this.trackService.editCommentById(req.user.id, tId, text)
     }
 
     @Post('genre/:id/remove')
     removeGenre(@Request() req, @Param('id') tId: ObjectId, @Body('genre') gId: ObjectId) {
-        return this.trackService.removeGenre(req.user['id'], tId, gId)
+        return this.trackService.removeGenre(req.user.id, tId, gId)
     }
 
     @Post('collection/:id/remove')
     removeTrackFromCollection(@Request() req, @Param('id') tId: ObjectId) {
-        return this.trackService.removeTrackFromCollection(req.user['id'], tId)
+        return this.trackService.removeTrackFromCollection(req.user.id, tId)
     }
 
     @Post('playlist/:id/remove')
     removeTrackFromPlaylist(@Request() req, @Param('id') tId: ObjectId, @Body('playlist') pId: ObjectId) {
-        return this.trackService.removeTrackFromPlaylist(req.user['id'], tId, pId)
+        return this.trackService.removeTrackFromPlaylist(req.user.id, tId, pId)
     }
 
     @Delete('comment/:id/delete')
     deleteCommentById(@Request() req, @Param('id') tId: ObjectId) {
-        return this.trackService.deleteCommentById(req.user['id'], tId)
+        return this.trackService.deleteCommentById(req.user.id, tId)
     }
 
     @Roles('admin', 'artist')

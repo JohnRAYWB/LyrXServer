@@ -5,7 +5,6 @@ import {Model, ObjectId} from "mongoose";
 import {Comment, CommentDocument} from "./schema/comment.schema";
 import {FileService, FileType} from "../file/file.service";
 import {createTrackDto} from "./dto/create.track.dto";
-import {createCommentDto} from "./dto/create.comment.dto";
 import {User, UserDocument} from "../user/schema/user.schema";
 import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
 import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
@@ -37,7 +36,7 @@ export class TrackService {
     async getTrackById(tId: ObjectId): Promise<Track> {
 
         const track = await this.trackModel.findById(tId).populate([
-            'artist', 'comments', 'albums'
+            'artist', 'comments', 'album', 'genre'
         ])
 
         return track
@@ -88,16 +87,16 @@ export class TrackService {
         return 'Track add to your playlist successfully'
     }
 
-    async addComment(uId, dto: createCommentDto): Promise<any> {
+    async addComment(uId, tId: ObjectId, text: string): Promise<any> {
 
         const user = await this.userModel.findById(uId)
-        const track = await this.trackModel.findById(dto.track)
+        const track = await this.trackModel.findById(tId)
 
         try {
             if(!user.ban) {
-                const comment = await this.commentModel.create({...dto, user: user['id']})
-                await user.updateOne({$addToSet: {comments: comment['id']}})
-                await track.updateOne({$addToSet: {comments: comment['id']}})
+                const comment = await this.commentModel.create({user: user._id, text: text, track: track._id})
+                await user.updateOne({$addToSet: {comments: comment._id}})
+                await track.updateOne({$addToSet: {comments: comment._id}})
 
                 return 'Comment add successfully'
             } else {
@@ -111,10 +110,10 @@ export class TrackService {
 
     async editTrackDescription(uId: ObjectId, tId: ObjectId, dto: editTrackDescriptionDto): Promise<any> {
 
-        const track = await this.trackModel.findById(tId).populate('artist')
+        const track = await this.trackModel.findById(tId)
 
         try {
-            if(track.artist['id'] === uId.toString()) {
+            if(track.artist.toString() === uId.toString()) {
                 if(dto.name) {
                     await track.updateOne({$set: {name: dto.name}})
                 }
@@ -136,18 +135,18 @@ export class TrackService {
     async editTrackArtist(uId: ObjectId, tId: ObjectId): Promise<any> {
 
         const track = await this.trackModel.findById(tId).populate('artist')
-        const trackOwner = await this.userModel.findById(track.artist['id']).populate('tracks')
+        const trackOwner = await this.userModel.findById(track.artist._id).populate('tracks')
         const newOwner = await this.userModel.findById(uId)
 
         try {
-            if(!track.protectedDeletion && newOwner && newOwner['id'] !== trackOwner['id']) {
+            if(!track.protectedDeletion && newOwner && newOwner._id !== trackOwner._id) {
 
                 this.fileService.moveFile(track.audio,'audio', 'track', trackOwner.username, newOwner.username)
                 this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, newOwner.username)
 
-                await trackOwner.updateOne({$pull: {tracks: track['id']}})
-                await track.updateOne({$set: {artist: newOwner['id']}})
-                await newOwner.updateOne({$addToSet: {tracks: track['id']}})
+                await trackOwner.updateOne({$pull: {tracks: track._id}})
+                await track.updateOne({$set: {artist: newOwner._id}})
+                await newOwner.updateOne({$addToSet: {tracks: track._id}})
 
                 return 'Artist successfully updated'
             } else {
@@ -294,7 +293,7 @@ export class TrackService {
             if(add) {
                 if(!user.tracksCollection.find(t => t.toString() === tId.toString())) {
                     await track.updateOne({$inc: {favorites: 1}})
-                    await user.updateOne({$addToSet: {tracksCollection: track['id']}})
+                    await user.updateOne({$addToSet: {tracksCollection: track._id}})
                 } else {
                     throw new HttpException('You already has this track in your collection', HttpStatus.BAD_REQUEST)
                 }
@@ -303,7 +302,7 @@ export class TrackService {
             if(!add) {
                 if(user.tracksCollection.find(t => t.toString() === tId.toString())) {
                     await track.updateOne({$inc: {favorites: -1}})
-                    await user.updateOne({$pull: {tracksCollection: track['id']}})
+                    await user.updateOne({$pull: {tracksCollection: track._id}})
                 } else {
                     throw new HttpException(`You have not this track in your collection`, HttpStatus.BAD_REQUEST)
                 }
@@ -348,9 +347,8 @@ export class TrackService {
     private async editFileControl(uId: ObjectId, tId: ObjectId, file, type): Promise<any> {
 
         const track = await this.trackModel.findById(tId).populate('artist')
-
         try {
-            if(track && track.artist['id'] === uId) {
+            if(track && track.artist._id.toString() === uId.toString()) {
                 if(type === 'audio') {
                     const audioFile = this.fileService.updateFile(track.audio, file, FileType.AUDIO, 'track', track.artist.username)
                     await track.updateOne({$set: {audio: audioFile}})

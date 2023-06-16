@@ -16,9 +16,6 @@ export class Album extends Playlist{
         this.user = this.artist
     }
 
-    @Transform(({value}) => value.toString())
-    _id: string
-
     @Prop()
     description: string
 
