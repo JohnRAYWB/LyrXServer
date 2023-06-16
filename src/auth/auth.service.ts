@@ -9,6 +9,8 @@ import {User} from "../user/schema/user.schema";
 @Injectable()
 export class AuthService {
 
+    private authException = (e) => new HttpException(`Auth service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+
     constructor(
         private userService: UserService,
         private jwtService: JwtService
@@ -16,36 +18,31 @@ export class AuthService {
 
     async sighIn(dto: signInDto): Promise<any> {
 
-        const user = await this.userService.getUserByEmail(dto.email)
-        const encrypt = await bcrypt.compare(dto.password, user.password)
+        try {
 
-        if (!user) {
-            throw new UnauthorizedException('AuthService: Username is invalid')
-        }
-        if (!encrypt) {
-            throw new UnauthorizedException('AuthService: Password is invalid')
-        }
+            const user = await this.userService.getUserByEmail(dto.email)
+            const encrypt = await bcrypt.compare(dto.password, user.password)
 
-        return this.tokenGenerator(user)
+            if (!user || !encrypt) {
+                throw new UnauthorizedException('AuthService: Email or password is invalid')
+            }
+
+            return this.tokenGenerator(user)
+        } catch (e) {
+            throw this.authException(e)
+        }
     }
 
     async signUp(dto: createUserDto): Promise<any> {
 
-        const checkEmail = await this.userService.getUserByEmail(dto.email)
-        const checkUsername = await this.userService.getUserByName(dto.username)
+        try {
+            const hash = await bcrypt.hash(dto.password, 10)
+            const user = await this.userService.createUser({...dto, password: hash})
 
-        if(checkEmail) {
-            throw new HttpException('Auth service: Current email already used', HttpStatus.BAD_REQUEST)
+            return this.tokenGenerator(user)
+        } catch (e) {
+            throw new HttpException(`Auth service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
         }
-
-        if(checkUsername) {
-            throw new HttpException('Auth service: Current username already used', HttpStatus.BAD_REQUEST)
-        }
-
-        const hash = await bcrypt.hash(dto.password, 10)
-        const user = await this.userService.createUser({...dto, password: hash})
-
-        return this.tokenGenerator(user)
     }
 
     private async tokenGenerator(user: User) {

@@ -6,19 +6,24 @@ import {Comment} from "../../track/schema/comment.schema";
 import {Track} from "../../track/schema/track.schema";
 import {Playlist} from "../../playlist/schema/playlist.schema";
 import {Album} from "../../album/schema/album.schema";
+import {Exclude, Transform, Type} from "class-transformer";
 
 export type UserDocument = HydratedDocument<User>
 
 @Schema()
 export class User {
 
-    @Prop()
+    @Transform(({value}) => value.toString())
+    _id: string
+
+    @Prop({unique: true})
     email: string
 
     @Prop()
+    @Exclude()
     password: string
 
-    @Prop()
+    @Prop({unique: true})
     username: string
 
     @Prop()
@@ -37,12 +42,15 @@ export class User {
     banReason: String[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]})
+    @Type(() => User)
     followers: User[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]})
+    @Type(() => User)
     followings: User[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Role'}]})
+    @Type(() => Role)
     roles: Role[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}]})

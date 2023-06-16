@@ -4,15 +4,18 @@ import {Roles} from "../role/role.guard";
 import {birthDto} from "./dto/birth.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {ObjectId} from "mongoose";
+import MongooseClassSerializerInterceptor from "../serialization/mongoose.class.serializer";
+import {User} from "./schema/user.schema";
 
 @Controller('users')
+@UseInterceptors(MongooseClassSerializerInterceptor(User))
 export class UserController {
 
     constructor(private userService: UserService) {}
 
     @Get('profile')
     getProfile(@Request() req) {
-        return this.userService.getUserByEmail(req.user.email)
+        return this.userService.getUserById(req.user.id)
     }
 
     @Roles('admin')
@@ -33,28 +36,28 @@ export class UserController {
 
     @Get('collection')
     getOwnCollection(@Request() req) {
-        return this.userService.getOwnCollection(req.user['id'])
+        return this.userService.getOwnCollection(req.user.id)
     }
 
     @Get('playlists')
     getOwnPlaylists(@Request() req) {
-        return this.userService.getOwnPlaylists(req.user['id'])
+        return this.userService.getOwnPlaylists(req.user.id)
     }
 
     @Post('profile/about')
     addAbout(@Request() req, @Body('about') about: string) {
-        return this.userService.addAbout(req.user['id'], about)
+        return this.userService.addAbout(req.user.id, about)
     }
 
     @Post('profile/avatar')
     @UseInterceptors(FileInterceptor('avatar'))
     addAvatar(@Request() req, @UploadedFile() avatar) {
-        return this.userService.addAvatar(req.user['id'], avatar)
+        return this.userService.addAvatar(req.user.id, avatar)
     }
 
     @Post('profile/birth')
     addBirth(@Request() req, @Body() dto: birthDto) {
-        return this.userService.addBirth(req.user['id'], dto)
+        return this.userService.addBirth(req.user.id, dto)
     }
 
     @Roles('admin')
@@ -71,7 +74,7 @@ export class UserController {
 
     @Post('subscribe/:id')
     subscribe(@Request() req, @Param('id') uId: ObjectId) {
-        return this.userService.subscribe(uId, req.user['id'])
+        return this.userService.subscribe(uId, req.user.id)
     }
 
     @Roles('admin')
@@ -88,6 +91,6 @@ export class UserController {
 
     @Post('unsubscribe/:id')
     unsubscribe(@Request() req, @Param('id') uId: ObjectId) {
-        return this.userService.unsubscribe(uId, req.user['id'])
+        return this.userService.unsubscribe(uId, req.user.id)
     }
 }
