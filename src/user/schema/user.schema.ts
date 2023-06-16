@@ -54,24 +54,31 @@ export class User {
     roles: Role[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}]})
+    @Type(() => Comment)
     comments: Comment[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Track'}]})
+    @Type(() => Track)
     tracks: Track[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Track'}]})
+    @Type(() => Track)
     tracksCollection: Track[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Playlist'}]})
+    @Type(() => Playlist)
     playlists: Playlist[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Playlist'}]})
+    @Type(() => Playlist)
     playlistsCollection: Playlist[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Album'}]})
+    @Type(() => Album)
     albums: Album[]
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Album'}]})
+    @Type(() => Album)
     albumsCollection: Album[]
 }
 

@@ -33,12 +33,12 @@ export class Track {
     @Prop()
     image: string
 
+    @Prop({default: false})
+    protectedDeletion: boolean
+
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
     @Type(() => User)
     artist: User
-
-    @Prop({default: false})
-    protectedDeletion: boolean
 
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'Album'})
     @Type(() => Album)

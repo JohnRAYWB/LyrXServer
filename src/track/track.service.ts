@@ -58,8 +58,8 @@ export class TrackService {
         const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
         const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
 
-        const track = await this.trackModel.create({...dto, artist: user['id'], audio: audioFile, image: imageFile})
-        await user.updateOne({$addToSet: {tracks: track['id']}})
+        const track = await this.trackModel.create({...dto, artist: user._id, audio: audioFile, image: imageFile})
+        await user.updateOne({$addToSet: {tracks: track._id}})
 
         return track
     }
