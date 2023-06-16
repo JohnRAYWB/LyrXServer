@@ -160,7 +160,7 @@ export class UserService {
         try {
             if (add) {
                 if (!user.roles.find(r => r.role === rName)) {
-                    await user.updateOne({$addToSet: {roles: role['id']}})
+                    await user.updateOne({$addToSet: {roles: role._id}})
                 } else {
                     throw new HttpException('User has this role already', HttpStatus.BAD_REQUEST)
                 }
@@ -168,7 +168,7 @@ export class UserService {
 
             if (!add) {
                 if (user.roles.find(r => r.role === rName)) {
-                    await user.updateOne({$pull: {roles: role['id']}})
+                    await user.updateOne({$pull: {roles: role._id}})
                 } else {
                     throw new HttpException('User has not this role', HttpStatus.BAD_REQUEST)
                 }
