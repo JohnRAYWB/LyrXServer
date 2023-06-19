@@ -1,4 +1,4 @@
-import {HydratedDocument} from "mongoose";
+import {HydratedDocument, ObjectId} from "mongoose";
 import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
 import {User} from "../../user/schema/user.schema";
 import * as mongoose from "mongoose";
@@ -12,8 +12,8 @@ export type TrackDocument = HydratedDocument<Track>
 @Schema()
 export class Track {
 
-    @Transform(({value}) => value.toString())
-    _id: string
+    @Transform(({obj}) => obj._id.toString())
+    _id: ObjectId
 
     @Prop()
     name: string

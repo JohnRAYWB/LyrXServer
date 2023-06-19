@@ -1,4 +1,4 @@
-import {HydratedDocument} from "mongoose";
+import {HydratedDocument, ObjectId} from "mongoose";
 import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
 import * as mongoose from "mongoose";
 import {User} from "../../user/schema/user.schema";
@@ -11,8 +11,8 @@ export type PlaylistDocument = HydratedDocument<Playlist>
 @Schema()
 export class Playlist {
 
-    @Transform(({value}) => value.toString())
-    _id: string
+    @Transform(({obj}) => obj._id.toString())
+    _id: ObjectId
 
     @Prop()
     name: string

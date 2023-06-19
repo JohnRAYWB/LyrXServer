@@ -16,8 +16,11 @@ import {FileFieldsInterceptor, FileInterceptor} from "@nestjs/platform-express";
 import {Roles} from "../role/role.guard";
 import {ObjectId} from "mongoose";
 import {editTrackDescriptionDto} from "./dto/edit.track.description.dto";
+import MongooseClassSerializerInterceptor from "../serialization/mongoose.class.serializer";
+import {Track} from "./schema/track.schema";
 
 @Controller('tracks')
+@UseInterceptors(MongooseClassSerializerInterceptor(Track))
 export class TrackController {
 
     constructor(private trackService: TrackService) {}

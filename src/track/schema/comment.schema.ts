@@ -1,4 +1,4 @@
-import {HydratedDocument} from "mongoose";
+import {HydratedDocument, ObjectId} from "mongoose";
 import {Prop, Schema, SchemaFactory} from "@nestjs/mongoose";
 import * as mongoose from "mongoose";
 import {User} from "../../user/schema/user.schema";
@@ -10,8 +10,8 @@ export type CommentDocument = HydratedDocument<Comment>
 @Schema()
 export class Comment {
 
-    @Transform(({value}) => value.toString())
-    _id: string
+    @Transform(({obj}) => obj._id.toString())
+    _id: ObjectId
 
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
     @Type(() => User)
