@@ -57,7 +57,7 @@ export class AlbumService {
             const artist = await this.userModel.findById(uId)
             const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'album', artist.username)
             const album = await this.albumModel.create({
-                artist: artist['id'],
+                artist: artist._id,
                 name: dto.name,
                 description: dto.description,
                 image: imagePath
@@ -67,19 +67,19 @@ export class AlbumService {
 
                 const audio = this.fileService.createFile(FileType.AUDIO, a, 'track', artist.username)
                 const track = await this.trackModel.create({
-                    artist: artist['id'],
+                    artist: artist._id,
                     name: dto.trackName.shift(),
                     audio: audio,
                     image: imagePath,
-                    album: album['id'],
+                    album: album._id,
                     protectedDeletion: true
                 })
 
-                await artist.updateOne({$addToSet: {tracks: track['id']}})
-                await album.updateOne({$addToSet: {tracks: track['id']}})
+                await artist.updateOne({$addToSet: {tracks: track._id}})
+                await album.updateOne({$addToSet: {tracks: track._id}})
             })
 
-            await artist.updateOne({$addToSet: {albums: album['id']}})
+            await artist.updateOne({$addToSet: {albums: album._id}})
             return album
         } catch (e) {
             throw this.albumException(e)
@@ -129,9 +129,9 @@ export class AlbumService {
         const album = await this.albumModel.findById(aId).populate(['artist', 'tracks'])
 
         try {
-            if (album.artist['id'] === user['id'] || user.roles.find(r => r.role === 'admin')) {
+            if (album.artist._id.toString() === user._id.toString() || user.roles.find(r => r.role === 'admin')) {
                 for(let track of album.tracks) {
-                    await this.removeTrackFromAlbum(uId, track['id'], aId)
+                    await this.removeTrackFromAlbum(uId, track._id, aId)
                 }
                 await this.userModel.find().updateMany({}, {
                     $pullAll: {

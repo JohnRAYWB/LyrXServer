@@ -8,7 +8,7 @@ import MongooseClassSerializerInterceptor from "../serialization/mongoose.class.
 import {User} from "./schema/user.schema";
 
 @Controller('users')
-@UseInterceptors(MongooseClassSerializerInterceptor(User))
+// @UseInterceptors(MongooseClassSerializerInterceptor(User))
 export class UserController {
 
     constructor(private userService: UserService) {}

@@ -46,7 +46,7 @@ export class AlbumController {
         const trackNames = [].concat(dto.trackName)
 
         if(audio.length === trackNames.length) {
-            return this.albumService.createAlbum(req.user['id'], {...dto, trackName: trackNames}, audio, image[0])
+            return this.albumService.createAlbum(req.user.id, {...dto, trackName: trackNames}, audio, image[0])
         } else {
             throw new HttpException(`You forgot add audio or track name. Audio length: ${audio.length}; Tracks name length: ${trackNames.length}`, HttpStatus.BAD_REQUEST)
         }
@@ -54,36 +54,36 @@ export class AlbumController {
 
     @Post('genre/:id/add')
     addGenre(@Request() req, @Param('id') aId: ObjectId, @Body('genre') gId: ObjectId) {
-        return this.albumService.addGenre(req.user['id'], aId, gId)
+        return this.albumService.addGenre(req.user.id, aId, gId)
     }
 
     @Post('collection/:id/add')
     addAlbumToCollection(@Request() req, @Param('id') aId: ObjectId) {
-        return this.albumService.addAlbumToCollection(req.user['id'], aId)
+        return this.albumService.addAlbumToCollection(req.user.id, aId)
     }
 
     @Patch('track/:id/add')
     addTrackToAlbum(@Request() req, @Param('id') aId: ObjectId, @Body('track') tId: ObjectId) {
-        return this.albumService.addTrackToAlbum(req.user['id'], tId, aId)
+        return this.albumService.addTrackToAlbum(req.user.id, tId, aId)
     }
 
     @Post('genre/:id/remove')
     removeGenre(@Request() req, @Param('id') aId: ObjectId, @Body('genre') gId: ObjectId) {
-        return this.albumService.removeGenre(req.user['id'], aId, gId)
+        return this.albumService.removeGenre(req.user.id, aId, gId)
     }
 
     @Post('collection/:id/remove')
     removeAlbumFromCollection(@Request() req, @Param('id') aId: ObjectId) {
-        return this.albumService.removeAlbumFromCollection(req.user['id'], aId)
+        return this.albumService.removeAlbumFromCollection(req.user.id, aId)
     }
 
     @Patch('track/:id/remove')
     removeTrackFromAlbum(@Request() req, @Param('id') aId: ObjectId, @Body('track') tId: ObjectId) {
-        return this.albumService.removeTrackFromAlbum(req.user['id'], tId, aId)
+        return this.albumService.removeTrackFromAlbum(req.user.id, tId, aId)
     }
 
     @Delete(':id')
     deleteAlbum(@Request() req, @Param('id') aId: ObjectId) {
-        return this.albumService.deleteAlbum(req.user['id'], aId)
+        return this.albumService.deleteAlbum(req.user.id, aId)
     }
 }

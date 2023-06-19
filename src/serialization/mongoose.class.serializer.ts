@@ -4,7 +4,7 @@ import {
     Type
 } from "@nestjs/common";
 import {
-    ClassTransformOptions, Exclude,
+    ClassTransformOptions,
     plainToClass
 } from "class-transformer";
 import {Document} from "mongoose";
@@ -49,8 +49,8 @@ export default MongooseClassSerializerInterceptor;
 // exp how it use it in schema
 //
 // export class User {
-//     @Transform(({value}) => value.toString())
-//     _id: string
+//     @Transform(({obj}) => obj._id.toString())
+//     _id: ObjectId
 //
 //     @Prop({unique: true})
 //     email: string

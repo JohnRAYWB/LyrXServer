@@ -49,9 +49,9 @@ export class PlaylistService {
 
         const user = await this.userModel.findById(uId)
         const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'playlist', user.username)
-        const playlist = await this.playlistModel.create({name: name, user: user['id'], favorites: 0, image: imagePath})
+        const playlist = await this.playlistModel.create({name: name, user: user._id, favorites: 0, image: imagePath})
 
-        await user.updateOne({$push: {playlists: playlist['id']}})
+        await user.updateOne({$push: {playlists: playlist._id}})
 
         return playlist
     }
@@ -86,7 +86,7 @@ export class PlaylistService {
         const playlist = await this.playlistModel.findById(pId).populate('user')
 
         try {
-            if (uId === playlist.user['id'] || user.roles.find(r => r.role === 'admin')) {
+            if (uId.toString() === playlist.user._id.toString() || user.roles.find(r => r.role === 'admin')) {
                 await this.userModel.find().updateMany({}, {
                     $pullAll: {
                         playlists: [playlist],

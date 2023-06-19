@@ -51,7 +51,7 @@ export class TrackService {
         return track
     }
 
-    async createTrack(uId, dto: createTrackDto, audio, image): Promise<Track> {
+    async createTrack(uId: ObjectId, dto: createTrackDto, audio, image): Promise<Track> {
 
         const user = await this.userModel.findById(uId)
         const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)

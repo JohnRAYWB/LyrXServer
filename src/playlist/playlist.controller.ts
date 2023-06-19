@@ -39,31 +39,31 @@ export class PlaylistController {
     @Post()
     @UseInterceptors(FileInterceptor('image'))
     createPlaylist(@Request() req, @UploadedFile() image, @Body('name') name: string) {
-        return this.playlistService.createPlaylist(req.user['id'], name, image)
+        return this.playlistService.createPlaylist(req.user.id, name, image)
     }
 
     @Post('genre/:id/add')
     addGenre(@Request() req, @Param('id') pId: ObjectId, @Body('genre') gId: ObjectId) {
-        return this.playlistService.addGenre(req.user['id'], pId, gId)
+        return this.playlistService.addGenre(req.user.id, pId, gId)
     }
 
     @Post('collection/:id/add')
     addPlaylistToCollection(@Request() req, @Param('id') pId: ObjectId) {
-        return this.playlistService.addPlaylistToCollection(req.user['id'], pId)
+        return this.playlistService.addPlaylistToCollection(req.user.id, pId)
     }
 
     @Post('genre/:id/remove')
     removeGenre(@Request() req, @Param('id') pId: ObjectId, @Body('genre') gId: ObjectId) {
-        return this.playlistService.removeGenre(req.user['id'], pId, gId)
+        return this.playlistService.removeGenre(req.user.id, pId, gId)
     }
 
     @Post('collection/:id/remove')
     removePlaylistFromCollection(@Request() req, @Param('id') pId: ObjectId) {
-        return this.playlistService.removePlaylistFromCollection(req.user['id'], pId)
+        return this.playlistService.removePlaylistFromCollection(req.user.id, pId)
     }
 
     @Delete(':id')
     deletePlaylist(@Request() req, @Param('id') pId: ObjectId) {
-        return this.playlistService.deletePlaylist(req.user['id'], pId)
+        return this.playlistService.deletePlaylist(req.user.id, pId)
     }
 }
