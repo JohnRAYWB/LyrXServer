@@ -8,6 +8,8 @@ import {createRoleDto} from "./dto/create.role.dto";
 @Injectable()
 export class RoleService {
 
+    private roleException = (e) => new HttpException(`Role service: Something goes wrong. Error: ${e.message}`, HttpStatus.BAD_REQUEST)
+
     constructor(@InjectModel(Role.name) private roleModel: Model<RoleDocument>) {
     }
 
@@ -27,14 +29,18 @@ export class RoleService {
 
     async createRole(dto: createRoleDto): Promise<Role> {
 
-        const checkRole = await this.roleModel.findOne({role: dto.role})
+        try {
+            const checkRole = await this.roleModel.findOne({role: dto.role})
 
-        if(checkRole) {
-            throw new HttpException('Role service: Role already exist', HttpStatus.BAD_REQUEST)
+            if(checkRole) {
+                throw new HttpException('Role service: Role already exist', HttpStatus.BAD_REQUEST)
+            }
+
+            const role = await this.roleModel.create({...dto})
+
+            return role
+        } catch (e) {
+            throw this.roleException(e)
         }
-
-        const role = await this.roleModel.create({...dto})
-
-        return role
     }
 }

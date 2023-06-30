@@ -75,10 +75,14 @@ export class UserService {
 
     async createUser(dto: createUserDto): Promise<User> {
 
-        const role = await this.roleService.getRole('user')
-        const user = await this.userModel.create({...dto, roles: role})
+        try {
+            const role = await this.roleService.getRole('user')
+            const user = await this.userModel.create({...dto, roles: role})
 
-        return user
+            return user
+        } catch (e) {
+            throw this.userException(e)
+        }
     }
 
     async addAbout(uId: ObjectId, about: string): Promise<any> {

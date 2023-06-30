@@ -16,7 +16,7 @@ export class Album extends Playlist{
         this.user = this.artist
     }
 
-    @Prop()
+    @Prop({required: true})
     description: string
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Genre'}]})

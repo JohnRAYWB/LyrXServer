@@ -18,7 +18,7 @@ export class Track {
     @Prop({required: true})
     name: string
 
-    @Prop()
+    @Prop({required: true})
     description: string
 
     @Prop({default: 0})
@@ -27,10 +27,10 @@ export class Track {
     @Prop({default: 0})
     favorites: number
 
-    @Prop()
+    @Prop({required: true})
     audio: string
 
-    @Prop()
+    @Prop({required: true})
     image: string
 
     @Prop({default: false})

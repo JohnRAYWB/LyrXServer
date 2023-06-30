@@ -45,15 +45,20 @@ export class PlaylistService {
         return playlists
     }
 
-    async createPlaylist(uId, name, image): Promise<Playlist> {
+    async createPlaylist(uId, name, description, image): Promise<Playlist> {
 
-        const user = await this.userModel.findById(uId)
-        const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'playlist', user.username)
-        const playlist = await this.playlistModel.create({name: name, user: user._id, favorites: 0, image: imagePath})
+        try {
+            const user = await this.userModel.findById(uId)
+            const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'playlist', user.username)
+            const playlist = await this.playlistModel.create({name: name, description: description, user: user._id, favorites: 0, image: imagePath})
 
-        await user.updateOne({$push: {playlists: playlist._id}})
+            await user.updateOne({$push: {playlists: playlist._id}})
 
-        return playlist
+            return playlist
+        } catch (e) {
+            throw this.playlistException(e)
+        }
+
     }
 
     async addGenre(uId: ObjectId, pId: ObjectId, gId: ObjectId): Promise<any> {

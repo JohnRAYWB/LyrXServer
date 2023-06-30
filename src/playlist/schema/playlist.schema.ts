@@ -14,10 +14,13 @@ export class Playlist {
     @Transform(({obj}) => obj._id.toString())
     _id: ObjectId
 
-    @Prop()
+    @Prop({required: true})
     name: string
 
-    @Prop()
+    @Prop({required: true})
+    description: string
+
+    @Prop({required: true})
     image: string
 
     @Prop({default: 0})

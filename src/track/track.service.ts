@@ -53,14 +53,18 @@ export class TrackService {
 
     async createTrack(uId: ObjectId, dto: createTrackDto, audio, image): Promise<Track> {
 
-        const user = await this.userModel.findById(uId)
-        const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
-        const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
+        try {
+            const user = await this.userModel.findById(uId)
+            const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
+            const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
 
-        const track = await this.trackModel.create({...dto, artist: user._id, audio: audioFile, image: imageFile})
-        await user.updateOne({$addToSet: {tracks: track._id}})
+            const track = await this.trackModel.create({...dto, artist: user._id, audio: audioFile, image: imageFile})
+            await user.updateOne({$addToSet: {tracks: track._id}})
 
-        return track
+            return track
+        } catch (e) {
+            throw this.trackException(e)
+        }
     }
 
     async addGenre(uId: ObjectId, tId: ObjectId, gId: ObjectId): Promise<any> {

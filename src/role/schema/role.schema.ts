@@ -10,10 +10,10 @@ export class Role {
     @Transform(({obj}) => obj._id.toString())
     _id: ObjectId
 
-    @Prop()
+    @Prop({required: true})
     role: string
 
-    @Prop()
+    @Prop({required: true})
     description: string
 }
 

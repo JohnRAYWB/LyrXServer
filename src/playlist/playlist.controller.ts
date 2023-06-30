@@ -38,8 +38,8 @@ export class PlaylistController {
 
     @Post()
     @UseInterceptors(FileInterceptor('image'))
-    createPlaylist(@Request() req, @UploadedFile() image, @Body('name') name: string) {
-        return this.playlistService.createPlaylist(req.user.id, name, image)
+    createPlaylist(@Request() req, @UploadedFile() image, @Body('name') name: string, @Body('description') description: string) {
+        return this.playlistService.createPlaylist(req.user.id, name, description, image)
     }
 
     @Post('genre/:id/add')
