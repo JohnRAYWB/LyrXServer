@@ -115,7 +115,7 @@ export class PlaylistService {
         const playlist = await this.playlistModel.findById(pId)
 
         try {
-            if(playlist.user.toString() === uId.toString() || user.roles.find(r => r.role === 'admin')) {
+            if(playlist.user.toString() === uId.toString()) {
                 if(add) {
                     if(!playlist.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.addEntityToGenre(gId, pId, 'playlist')

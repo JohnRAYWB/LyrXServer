@@ -36,6 +36,12 @@ export class AuthService {
     async signUp(dto: createUserDto): Promise<any> {
 
         try {
+            const candidate = await this.userService.getUserByEmail(dto.email)
+
+            if(candidate) {
+                throw new UnauthorizedException('AuthService: Email used already')
+            }
+
             const hash = await bcrypt.hash(dto.password, 10)
             const user = await this.userService.createUser({...dto, password: hash})
 

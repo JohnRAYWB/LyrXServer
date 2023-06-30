@@ -260,7 +260,7 @@ export class TrackService {
         const track = await this.trackModel.findById(tId)
 
         try {
-            if(track.artist.toString() === uId.toString() || user.roles.find(r => r.role === 'admin')) {
+            if(track.artist.toString() === uId.toString()) {
                 if(add) {
                     if(!track.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.addEntityToGenre(gId, tId, 'track')

@@ -158,7 +158,7 @@ export class AlbumService {
         const album = await this.albumModel.findById(aId)
 
         try {
-            if(album.artist.toString() === uId.toString() || user.roles.find(r => r.role === 'admin')) {
+            if(album.artist.toString() === uId.toString()) {
                 if(add) {
                     if(!album.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.addEntityToGenre(gId, aId, 'album')

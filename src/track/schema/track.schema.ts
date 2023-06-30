@@ -15,7 +15,7 @@ export class Track {
     @Transform(({obj}) => obj._id.toString())
     _id: ObjectId
 
-    @Prop()
+    @Prop({required: true})
     name: string
 
     @Prop()
