@@ -29,6 +29,11 @@ export class AlbumController {
         return this.albumService.getAlbumById(aId)
     }
 
+    @Get('genre/:id')
+    getAlbumsByGenre(@Param('id') gId: ObjectId) {
+        return this.albumService.getAlbumsByGenre(gId)
+    }
+
     @Get('search')
     searchAlbumByName(@Query('name') name: string) {
         return this.albumService.searchAlbumByName(name)

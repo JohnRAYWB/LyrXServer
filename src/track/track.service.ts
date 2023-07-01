@@ -33,6 +33,14 @@ export class TrackService {
         return tracksList
     }
 
+    async getTracksByGenre(gId: ObjectId): Promise<Track[]> {
+        const tracksList = await this.trackModel.find({
+            genre: gId
+        })
+
+        return tracksList
+    }
+
     async getTrackById(tId: ObjectId): Promise<Track> {
 
         const track = await this.trackModel.findById(tId).populate([
@@ -260,7 +268,6 @@ export class TrackService {
 
     private async genreControl(uId: ObjectId, tId: ObjectId, gId: ObjectId, add: boolean) {
 
-        const user = await this.userModel.findById(uId).populate('roles')
         const track = await this.trackModel.findById(tId)
 
         try {
@@ -282,6 +289,8 @@ export class TrackService {
                         throw new HttpException('Track has not this genre', HttpStatus.BAD_REQUEST)
                     }
                 }
+            } else {
+                throw new HttpException(`It's not your track`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
             throw this.trackException(e)

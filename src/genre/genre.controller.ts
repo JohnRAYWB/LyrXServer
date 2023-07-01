@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Post, Request} from "@nestjs/common";
+import {Body, Controller, Delete, Get, Param, Post} from "@nestjs/common";
 import {GenreService} from "./genre.service";
 import {createGenreDto} from "./dto/create.genre.dto";
 import {Roles} from "../role/role.guard";

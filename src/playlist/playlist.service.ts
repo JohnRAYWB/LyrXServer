@@ -36,6 +36,14 @@ export class PlaylistService {
         return playlist
     }
 
+    async getPlaylistsByGenre(gId: ObjectId): Promise<Playlist[]> {
+        const playlists = await this.playlistModel.find({
+            genre: gId
+        })
+
+        return playlists
+    }
+
     async searchPlaylistByName(name: string): Promise<Playlist[]> {
 
         const playlists = await this.playlistModel.find({
@@ -116,7 +124,6 @@ export class PlaylistService {
 
     private async genreControl(uId: ObjectId, pId: ObjectId, gId: ObjectId, add: boolean) {
 
-        const user = await this.userModel.findById(uId).populate('roles')
         const playlist = await this.playlistModel.findById(pId)
 
         try {
@@ -138,6 +145,8 @@ export class PlaylistService {
                         throw new HttpException('Playlist has not this genre', HttpStatus.BAD_REQUEST)
                     }
                 }
+            }  else {
+                throw new HttpException(`It's not your playlist`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
             throw this.playlistException(e)

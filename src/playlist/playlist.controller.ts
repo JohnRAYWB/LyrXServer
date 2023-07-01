@@ -31,6 +31,11 @@ export class PlaylistController {
         return this.playlistService.getPlaylistById(pId)
     }
 
+    @Get('genre/:id')
+    getPlaylistsByGenre(@Param('id') gId: ObjectId) {
+        return this.playlistService.getPlaylistsByGenre(gId)
+    }
+
     @Get('/search')
     searchPlaylistByName(@Query('name') name: string) {
         return this.playlistService.searchPlaylistByName(name)

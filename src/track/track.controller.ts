@@ -32,6 +32,11 @@ export class TrackController {
         return this.trackService.getTrackById(tId)
     }
 
+    @Get('genre/:id')
+    getTracksByGenre(@Param('id') gId: ObjectId) {
+        return this.trackService.getTracksByGenre(gId)
+    }
+
     @Get('search')
     searchTrackByName(@Query('name') name: string) {
         return this.trackService.searchTrackByName(name)

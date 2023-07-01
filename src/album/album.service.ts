@@ -42,6 +42,15 @@ export class AlbumService {
         return album
     }
 
+    async getAlbumsByGenre(gId: ObjectId): Promise<Album[]> {
+
+        const albumsList = await this.albumModel.find({
+            genre: gId
+        })
+
+        return albumsList
+    }
+
     async searchAlbumByName(name: string): Promise<Album[]> {
 
         const albumsList = await this.albumModel.find({
@@ -130,7 +139,7 @@ export class AlbumService {
 
         try {
             if (album.artist._id.toString() === user._id.toString() || user.roles.find(r => r.role === 'admin')) {
-                for(let track of album.tracks) {
+                for (let track of album.tracks) {
                     await this.removeTrackFromAlbum(uId, track._id, aId)
                 }
                 await this.userModel.find().updateMany({}, {
@@ -158,9 +167,9 @@ export class AlbumService {
         const album = await this.albumModel.findById(aId)
 
         try {
-            if(album.artist.toString() === uId.toString()) {
-                if(add) {
-                    if(!album.genre.find(g => g.toString() === gId.toString())) {
+            if (album.artist.toString() === uId.toString()) {
+                if (add) {
+                    if (!album.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.addEntityToGenre(gId, aId, 'album')
                         await album.updateOne({$addToSet: {genre: gId}})
                     } else {
@@ -168,14 +177,16 @@ export class AlbumService {
                     }
                 }
 
-                if(!add) {
-                    if(album.genre.find(g => g.toString() === gId.toString())) {
+                if (!add) {
+                    if (album.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.removeEntityFromGenre(gId, aId, 'album')
                         await album.updateOne({$pull: {genre: gId}})
                     } else {
                         throw new HttpException('Album has not this genre', HttpStatus.BAD_REQUEST)
                     }
                 }
+            } else {
+                throw new HttpException(`It's not your playlist`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
             throw this.albumException(e)
