@@ -18,7 +18,6 @@ export class UserController {
         return this.userService.getUserById(req.user.id)
     }
 
-    @Roles('admin')
     @Get()
     getUsers() {
         return this.userService.getAllUsers()

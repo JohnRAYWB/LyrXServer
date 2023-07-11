@@ -16,9 +16,9 @@ export class Track {
     _id: ObjectId
 
     @Prop({required: true})
-    name: string
+    name: []
 
-    @Prop({required: true})
+    @Prop()
     description: string
 
     @Prop({default: 0})

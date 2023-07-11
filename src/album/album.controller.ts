@@ -20,8 +20,13 @@ export class AlbumController {
     constructor(private albumService: AlbumService) {}
 
     @Get()
-    getAllAlbums() {
-        return this.albumService.getAllAlbums()
+    getAllAlbums(@Query('limit') limit: number, @Query('page') page: number) {
+        return this.albumService.getAllAlbums(limit, page)
+    }
+
+    @Get('top')
+    getMostLiked(@Query('page') page: number) {
+        return this.albumService.getMostLiked(page)
     }
 
     @Get(':id/current')

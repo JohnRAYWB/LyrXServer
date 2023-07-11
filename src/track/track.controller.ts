@@ -2,7 +2,7 @@ import {
     Body,
     Controller,
     Delete,
-    Get,
+    Get, HttpException, HttpStatus,
     Param, Patch,
     Post,
     Query,
@@ -23,8 +23,13 @@ export class TrackController {
     constructor(private trackService: TrackService) {}
 
     @Get()
-    getAllTracks() {
-        return this.trackService.getAllTracks()
+    getAllTracks(@Query('limit') limit: number, @Query('page') page: number) {
+        return this.trackService.getAllTracks(limit, page)
+    }
+
+    @Get('top')
+    getMostLiked(@Query('page') page: number) {
+        return this.trackService.getMostLiked(page)
     }
 
     @Get(':id/current')
@@ -50,7 +55,12 @@ export class TrackController {
     ]))
     createTrack(@Request() req, @UploadedFiles() files, @Body() dto: createTrackDto) {
         const {audio, image} = files
-        return this.trackService.createTrack(req.user['id'], dto, audio[0], image[0])
+        if(audio && image) {
+            return this.trackService.createTrack(req.user['id'], dto, audio[0], image[0])
+
+        } else {
+            throw new HttpException(`You don't and image or audio! Audio: ${audio}; Image: ${image}`, HttpStatus.BAD_REQUEST)
+        }
     }
 
     @Post('genre/:id/add')

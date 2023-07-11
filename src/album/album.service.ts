@@ -28,11 +28,18 @@ export class AlbumService {
     ) {
     }
 
-    async getAllAlbums(): Promise<Album[]> {
+    async getAllAlbums(limit = 10 , page = 0): Promise<Album[]> {
 
-        const albumsList = await this.albumModel.find()
+        const albumsList = await this.albumModel.find().limit(limit).skip(page)
 
         return albumsList
+    }
+
+    async getMostLiked(page = 0) {
+
+        const albums = await this.albumModel.find().sort({favorites: -1}).skip(page).limit(5)
+
+        return albums
     }
 
     async getAlbumById(aId: ObjectId): Promise<Album> {
@@ -65,19 +72,20 @@ export class AlbumService {
         try {
             const artist = await this.userModel.findById(uId)
             const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'album', artist.username)
+            const aName = [artist.username, dto.name]
             const album = await this.albumModel.create({
                 artist: artist._id,
-                name: dto.name,
+                name: aName,
                 description: dto.description,
                 image: imagePath
             })
 
             audio.map(async a => {
-
+                const trackName = [artist.username, dto.trackName.shift()]
                 const audio = this.fileService.createFile(FileType.AUDIO, a, 'track', artist.username)
                 const track = await this.trackModel.create({
                     artist: artist._id,
-                    name: dto.trackName.shift(),
+                    name: trackName,
                     audio: audio,
                     image: imagePath,
                     album: album._id,

@@ -15,7 +15,7 @@ export class Playlist {
     _id: ObjectId
 
     @Prop({required: true})
-    name: string
+    name: []
 
     @Prop({required: true})
     description: string

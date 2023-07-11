@@ -20,11 +20,18 @@ export class PlaylistService {
         @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
         private genreService: GenreService,
         private fileService: FileService
-    ) {}
+    ) {
+    }
 
-    async getAllPlaylists(): Promise<Playlist[]> {
+    async getAllPlaylists(limit = 10, page = 0): Promise<Playlist[]> {
 
-        const playlists = await this.playlistModel.find()
+        const playlists = await this.playlistModel.find().limit(limit).skip(page)
+
+        return playlists
+    }
+
+    async getMostLiked(page = 0): Promise<Playlist[]> {
+        const playlists = await this.playlistModel.find().sort({favorites: -1}).skip(page).limit(5)
 
         return playlists
     }
@@ -57,8 +64,15 @@ export class PlaylistService {
 
         try {
             const user = await this.userModel.findById(uId)
+            const pName = [user.username, name]
             const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'playlist', user.username)
-            const playlist = await this.playlistModel.create({name: name, description: description, user: user._id, favorites: 0, image: imagePath})
+            const playlist = await this.playlistModel.create({
+                name: pName,
+                description: description,
+                user: user._id,
+                favorites: 0,
+                image: imagePath
+            })
 
             await user.updateOne({$push: {playlists: playlist._id}})
 
@@ -127,9 +141,9 @@ export class PlaylistService {
         const playlist = await this.playlistModel.findById(pId)
 
         try {
-            if(playlist.user.toString() === uId.toString()) {
-                if(add) {
-                    if(!playlist.genre.find(g => g.toString() === gId.toString())) {
+            if (playlist.user.toString() === uId.toString()) {
+                if (add) {
+                    if (!playlist.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.addEntityToGenre(gId, pId, 'playlist')
                         await playlist.updateOne({$addToSet: {genre: gId}})
                     } else {
@@ -137,15 +151,15 @@ export class PlaylistService {
                     }
                 }
 
-                if(!add) {
-                    if(playlist.genre.find(g => g.toString() === gId.toString())) {
+                if (!add) {
+                    if (playlist.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.removeEntityFromGenre(gId, pId, 'playlist')
                         await playlist.updateOne({$pull: {genre: gId}})
                     } else {
                         throw new HttpException('Playlist has not this genre', HttpStatus.BAD_REQUEST)
                     }
                 }
-            }  else {
+            } else {
                 throw new HttpException(`It's not your playlist`, HttpStatus.BAD_REQUEST)
             }
         } catch (e) {
@@ -159,7 +173,7 @@ export class PlaylistService {
         const playlist = await this.playlistModel.findById(pId)
 
         try {
-            if(add) {
+            if (add) {
                 if (!user.playlistsCollection.find(p => p.toString() === pId.toString())) {
                     await user.updateOne({$addToSet: {playlistsCollection: pId}})
                     await playlist.updateOne({$inc: {favorites: 1}})
@@ -168,7 +182,7 @@ export class PlaylistService {
                 }
             }
 
-            if(!add) {
+            if (!add) {
                 if (user.playlistsCollection.find(p => p.toString() === pId.toString())) {
                     await user.updateOne({$pull: {playlistsCollection: pId}})
                     await playlist.updateOne({$inc: {favorites: -1}})

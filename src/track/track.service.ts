@@ -26,11 +26,17 @@ export class TrackService {
        private fileService: FileService,
     ) {}
 
-    async getAllTracks(): Promise<Track[]> {
+    async getAllTracks(limit = 10 , page = 0): Promise<Track[]> {
 
-        const tracksList = await this.trackModel.find()
+        const tracksList = await this.trackModel.find().skip(page).limit(limit)
 
         return tracksList
+    }
+
+    async getMostLiked(page = 0): Promise<Track[]> {
+        const tracks = await this.trackModel.find().sort({favorites: -1}).skip(page).limit(5)
+
+        return tracks
     }
 
     async getTracksByGenre(gId: ObjectId): Promise<Track[]> {
@@ -60,13 +66,13 @@ export class TrackService {
     }
 
     async createTrack(uId: ObjectId, dto: createTrackDto, audio, image): Promise<Track> {
-
         try {
             const user = await this.userModel.findById(uId)
             const audioFile = this.fileService.createFile(FileType.AUDIO, audio, 'track', user.username)
             const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
+            const tName = [user.username, dto.name]
 
-            const track = await this.trackModel.create({...dto, artist: user._id, audio: audioFile, image: imageFile})
+            const track = await this.trackModel.create({...dto, name: tName, artist: user._id, audio: audioFile, image: imageFile})
             await user.updateOne({$addToSet: {tracks: track._id}})
 
             return track
