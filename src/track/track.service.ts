@@ -17,16 +17,17 @@ export class TrackService {
     private trackException = (e) => new HttpException(`Track service: Something goes wrong. Error: ${e.message}`, HttpStatus.NOT_FOUND)
 
     constructor(
-       @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
-       @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
-       @InjectModel(User.name) private userModel: Model<UserDocument>,
-       @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
-       @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
-       private genreService: GenreService,
-       private fileService: FileService,
-    ) {}
+        @InjectModel(Track.name) private trackModel: Model<TrackDocument>,
+        @InjectModel(Comment.name) private commentModel: Model<CommentDocument>,
+        @InjectModel(User.name) private userModel: Model<UserDocument>,
+        @InjectModel(Playlist.name) private playlistModel: Model<PlaylistDocument>,
+        @InjectModel(Genre.name) private genreModel: Model<GenreDocument>,
+        private genreService: GenreService,
+        private fileService: FileService,
+    ) {
+    }
 
-    async getAllTracks(limit = 10 , page = 0): Promise<Track[]> {
+    async getAllTracks(limit = 10, page = 0): Promise<Track[]> {
 
         const tracksList = await this.trackModel.find().skip(page).limit(limit)
 
@@ -49,14 +50,14 @@ export class TrackService {
 
     async getTrackById(tId: ObjectId): Promise<Track> {
 
-        const track = await this.trackModel.findById(tId).populate([
-            'artist', 'comments', 'album', 'genre'
-        ])
+        const track = await this.trackModel.findById(tId)
+            .populate(['artist', 'album', 'genre'])
+            .populate({path: 'comments', populate: 'user'})
 
         return track
     }
 
-    async searchTrackByName(name: string): Promise<Track[]>{
+    async searchTrackByName(name: string): Promise<Track[]> {
 
         const track = await this.trackModel.find({
             name: {$regex: new RegExp(name, 'i')}
@@ -72,7 +73,13 @@ export class TrackService {
             const imageFile = this.fileService.createFile(FileType.IMAGE, image, 'track', user.username)
             const tName = [user.username, dto.name]
 
-            const track = await this.trackModel.create({...dto, name: tName, artist: user._id, audio: audioFile, image: imageFile})
+            const track = await this.trackModel.create({
+                ...dto,
+                name: tName,
+                artist: user._id,
+                audio: audioFile,
+                image: imageFile
+            })
             await user.updateOne({$addToSet: {tracks: track._id}})
 
             return track
@@ -111,7 +118,7 @@ export class TrackService {
         const track = await this.trackModel.findById(tId)
 
         try {
-            if(!user.ban) {
+            if (!user.ban) {
                 const comment = await this.commentModel.create({user: user._id, text: text, track: track._id})
                 await user.updateOne({$addToSet: {comments: comment._id}})
                 await track.updateOne({$addToSet: {comments: comment._id}})
@@ -131,12 +138,12 @@ export class TrackService {
         const track = await this.trackModel.findById(tId)
 
         try {
-            if(track.artist.toString() === uId.toString()) {
-                if(dto.name) {
+            if (track.artist.toString() === uId.toString()) {
+                if (dto.name) {
                     await track.updateOne({$set: {name: dto.name}})
                 }
 
-                if(dto.description) {
+                if (dto.description) {
                     await track.updateOne({$set: {description: dto.description}})
                 }
 
@@ -157,9 +164,9 @@ export class TrackService {
         const newOwner = await this.userModel.findById(uId)
 
         try {
-            if(!track.protectedDeletion && newOwner && newOwner._id !== trackOwner._id) {
+            if (!track.protectedDeletion && newOwner && newOwner._id !== trackOwner._id) {
 
-                this.fileService.moveFile(track.audio,'audio', 'track', trackOwner.username, newOwner.username)
+                this.fileService.moveFile(track.audio, 'audio', 'track', trackOwner.username, newOwner.username)
                 this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, newOwner.username)
 
                 await trackOwner.updateOne({$pull: {tracks: track._id}})
@@ -191,8 +198,8 @@ export class TrackService {
 
         const comment = await this.commentModel.findById(tId)
 
-        try{
-            if(uId.toString() === comment.user.toString()) {
+        try {
+            if (uId.toString() === comment.user.toString()) {
                 await comment.updateOne({$set: {text: text}})
 
                 return 'Comment successfully changed'
@@ -228,9 +235,9 @@ export class TrackService {
         const user = await this.userModel.findById(uId).populate('roles')
 
         try {
-            if(user['id'] === comment.user['id'] || user.roles.find(role => role.role === 'admin')) {
+            if (user['id'] === comment.user['id'] || user.roles.find(role => role.role === 'admin')) {
                 await user.updateOne({$pull: {comments: comment['id']}})
-                await this.trackModel.findByIdAndUpdate(comment.track['id'],{$pull: {comments: comment['id']}})
+                await this.trackModel.findByIdAndUpdate(comment.track['id'], {$pull: {comments: comment['id']}})
 
                 comment.deleteOne()
 
@@ -248,12 +255,14 @@ export class TrackService {
         const track = await this.trackModel.findById(tId).populate('artist')
 
         try {
-            if(!track.protectedDeletion) {
-                await this.userModel.find().populate('comments').updateMany({}, {$pullAll: {
+            if (!track.protectedDeletion) {
+                await this.userModel.find().populate('comments').updateMany({}, {
+                    $pullAll: {
                         comments: [...track.comments],
                         tracks: [track],
                         tracksCollection: [track]
-                    }})
+                    }
+                })
                 await this.playlistModel.find().updateMany({}, {$pullAll: {tracks: [track]}})
                 await this.commentModel.deleteMany({track: track})
                 await this.genreModel.find().updateMany({}, {$pullAll: {tracks: [track]}})
@@ -277,9 +286,9 @@ export class TrackService {
         const track = await this.trackModel.findById(tId)
 
         try {
-            if(track.artist.toString() === uId.toString()) {
-                if(add) {
-                    if(!track.genre.find(g => g.toString() === gId.toString())) {
+            if (track.artist.toString() === uId.toString()) {
+                if (add) {
+                    if (!track.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.addEntityToGenre(gId, tId, 'track')
                         await track.updateOne({$addToSet: {genre: gId}})
                     } else {
@@ -287,8 +296,8 @@ export class TrackService {
                     }
                 }
 
-                if(!add) {
-                    if(track.genre.find(g => g.toString() === gId.toString())) {
+                if (!add) {
+                    if (track.genre.find(g => g.toString() === gId.toString())) {
                         await this.genreService.removeEntityFromGenre(gId, tId, 'track')
                         await track.updateOne({$pull: {genre: gId}})
                     } else {
@@ -309,8 +318,8 @@ export class TrackService {
         const user = await this.userModel.findById(uId)
 
         try {
-            if(add) {
-                if(!user.tracksCollection.find(t => t.toString() === tId.toString())) {
+            if (add) {
+                if (!user.tracksCollection.find(t => t.toString() === tId.toString())) {
                     await track.updateOne({$inc: {favorites: 1}})
                     await user.updateOne({$addToSet: {tracksCollection: track._id}})
                 } else {
@@ -318,8 +327,8 @@ export class TrackService {
                 }
             }
 
-            if(!add) {
-                if(user.tracksCollection.find(t => t.toString() === tId.toString())) {
+            if (!add) {
+                if (user.tracksCollection.find(t => t.toString() === tId.toString())) {
                     await track.updateOne({$inc: {favorites: -1}})
                     await user.updateOne({$pull: {tracksCollection: track._id}})
                 } else {
@@ -337,9 +346,9 @@ export class TrackService {
         const playlist = await this.playlistModel.findById(pId)
 
         try {
-            if(playlist.user.toString() === uId.toString()) {
-                if(add) {
-                    if(!playlist.tracks.find(t => t.toString() === tId.toString())) {
+            if (playlist.user.toString() === uId.toString()) {
+                if (add) {
+                    if (!playlist.tracks.find(t => t.toString() === tId.toString())) {
                         await playlist.updateOne({$addToSet: {tracks: tId}})
                         await track.updateOne({$inc: {favorites: 1}})
                     } else {
@@ -347,8 +356,8 @@ export class TrackService {
                     }
                 }
 
-                if(!add) {
-                    if(playlist.tracks.find(t => t.toString() === tId.toString())) {
+                if (!add) {
+                    if (playlist.tracks.find(t => t.toString() === tId.toString())) {
                         await playlist.updateOne({$pull: {tracks: tId}})
                         await track.updateOne({$inc: {favorites: -1}})
                     } else {
@@ -367,13 +376,13 @@ export class TrackService {
 
         const track = await this.trackModel.findById(tId).populate('artist')
         try {
-            if(track && track.artist._id.toString() === uId.toString()) {
-                if(type === 'audio') {
+            if (track && track.artist._id.toString() === uId.toString()) {
+                if (type === 'audio') {
                     const audioFile = this.fileService.updateFile(track.audio, file, FileType.AUDIO, 'track', track.artist.username)
                     await track.updateOne({$set: {audio: audioFile}})
                 }
 
-                if(type === 'image') {
+                if (type === 'image') {
                     const imageFile = this.fileService.updateFile(track.image, file, FileType.IMAGE, 'track', track.artist.username)
                     await track.updateOne({$set: {image: imageFile}})
                 }

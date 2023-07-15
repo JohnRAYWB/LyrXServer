@@ -38,9 +38,11 @@ export class UserService {
 
     async getUserById(uId: ObjectId): Promise<User> {
 
-        const user = await this.userModel.findById(uId).populate([
+        const user = await this.userModel.findById(uId)
+            .populate([
             'tracks', 'tracksCollection', 'playlists', 'playlistsCollection', 'albums', 'albumsCollection', 'followers', 'followings', 'roles'
         ])
+            .populate({path: 'tracks', populate: 'album'})
         return user
     }
 
