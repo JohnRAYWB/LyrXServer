@@ -22,9 +22,9 @@ export class UserService {
     ) {
     }
 
-    async getAllUsers(): Promise<User[]> {
+    async getAllUsers(limit = 10, page = 0): Promise<User[]> {
 
-        const usersList = await this.userModel.find()
+        const usersList = await this.userModel.find().skip(page).limit(limit)
 
         return usersList
     }
@@ -40,17 +40,25 @@ export class UserService {
 
         const user = await this.userModel.findById(uId)
             .populate([
-            'tracks', 'tracksCollection', 'playlists', 'playlistsCollection', 'albums', 'albumsCollection', 'followers', 'followings', 'roles'
-        ])
-            .populate({path: 'tracks', populate: 'album'})
+                {path: 'followers', populate: 'roles'},
+                {path: 'followings', populate: 'roles'},
+                {path: 'tracks', populate: 'album'},
+                {path: 'tracksCollection'},
+                {path: 'playlists'},
+                {path: 'playlistsCollection'},
+                {path: 'albums'},
+                {path: 'albumsCollection'},
+                {path: 'roles'},
+            ])
+
         return user
     }
 
-    async searchUserByName(username: string): Promise<User[]> {
+    async searchUserByName(username: string, limit = 10, page = 0): Promise<User[]> {
 
         const userList = await this.userModel.find({
             username: {$regex: new RegExp(username, 'i')}
-        })
+        }).populate('roles').skip(page).limit(limit)
 
         return userList
     }
@@ -148,14 +156,22 @@ export class UserService {
 
     async subscribe(uId: ObjectId, sId: ObjectId): Promise<any> {
 
-        await this.subscribeControl(uId, sId, true)
-        return 'Thanks for subscribe'
-    }
+        const user = await this.userModel.findById(uId)
+        const subscriber = await this.userModel.findById(sId)
 
-    async unsubscribe(uId: ObjectId, sId: ObjectId): Promise<any> {
-
-        await this.subscribeControl(uId, sId, false)
-        return 'You are unsubscribed successfully'
+        try {
+                if (!subscriber.followings.find(f => f.toString() === uId.toString())) {
+                    await user.updateOne({$addToSet: {followers: sId}})
+                    await subscriber.updateOne({$addToSet: {followings: uId}})
+                    return 'Thanks for subscribe'
+                } else {
+                    await user.updateOne({$pull: {followers: sId}})
+                    await subscriber.updateOne({$pull: {followings: uId}})
+                    return 'You are unsubscribed successfully'
+                }
+        } catch (e) {
+            this.userException(e)
+        }
     }
 
     private async roleControl(uId: ObjectId, rName: string, add: boolean): Promise<any> {
@@ -207,35 +223,6 @@ export class UserService {
             }
         } catch (e) {
             throw this.userException(e)
-        }
-
-    }
-
-    private async subscribeControl(uId: ObjectId, sId: ObjectId, follow: boolean): Promise<any> {
-
-        const user = await this.userModel.findById(uId)
-        const subscriber = await this.userModel.findById(sId)
-
-        try {
-            if (follow) {
-                if (!subscriber.followings.find(f => f.toString() === uId.toString())) {
-                    await user.updateOne({$addToSet: {followers: sId}})
-                    await subscriber.updateOne({$addToSet: {followings: uId}})
-                } else {
-                    throw new HttpException('You are follow this user already', HttpStatus.BAD_REQUEST)
-                }
-            }
-
-            if (!follow) {
-                if (subscriber.followings.find(f => f.toString() === uId.toString())) {
-                    await user.updateOne({$pull: {followers: sId}})
-                    await subscriber.updateOne({$pull: {followings: uId}})
-                } else {
-                    throw new HttpException('You are not follow this user', HttpStatus.BAD_REQUEST)
-                }
-            }
-        } catch (e) {
-            this.userException(e)
         }
     }
 }

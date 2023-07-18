@@ -27,8 +27,8 @@ export class PlaylistController {
     }
 
     @Get('top')
-    getMostLiked(@Query('page') page: number) {
-        return this.playlistService.getMostLiked(page)
+    getMostLiked() {
+        return this.playlistService.getMostLiked()
     }
 
     @Get(':id/current')

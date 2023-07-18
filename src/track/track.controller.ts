@@ -28,8 +28,8 @@ export class TrackController {
     }
 
     @Get('top')
-    getMostLiked(@Query('page') page: number) {
-        return this.trackService.getMostLiked(page)
+    getMostLiked() {
+        return this.trackService.getMostLiked()
     }
 
     @Get(':id/current')

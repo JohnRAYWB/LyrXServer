@@ -34,8 +34,8 @@ export class TrackService {
         return tracksList
     }
 
-    async getMostLiked(page = 0): Promise<Track[]> {
-        const tracks = await this.trackModel.find().sort({favorites: -1}).skip(page).limit(5)
+    async getMostLiked(): Promise<Track[]> {
+        const tracks = await this.trackModel.find().sort({favorites: -1}).limit(10)
 
         return tracks
     }
@@ -51,8 +51,12 @@ export class TrackService {
     async getTrackById(tId: ObjectId): Promise<Track> {
 
         const track = await this.trackModel.findById(tId)
-            .populate(['artist', 'album', 'genre'])
-            .populate({path: 'comments', populate: 'user'})
+            .populate([
+                {path: 'comments', populate: 'user'},
+                {path: 'artist'},
+                {path: 'album'},
+                {path: 'genre'}
+            ])
 
         return track
     }
@@ -61,7 +65,7 @@ export class TrackService {
 
         const track = await this.trackModel.find({
             name: {$regex: new RegExp(name, 'i')}
-        })
+        }).populate('album')
 
         return track
     }

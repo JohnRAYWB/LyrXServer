@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Post} from "@nestjs/common";
+import {Body, Controller, Delete, Get, Param, Post, Query} from "@nestjs/common";
 import {GenreService} from "./genre.service";
 import {createGenreDto} from "./dto/create.genre.dto";
 import {Roles} from "../role/role.guard";
@@ -12,8 +12,8 @@ export class GenreController {
     ) {}
 
     @Get()
-    getAllGenres() {
-        return this.genreService.getAllGenres()
+    getAllGenres(@Query('limit') limit: number, @Query('page') page: number) {
+        return this.genreService.getAllGenres(limit, page)
     }
 
     @Get(':id')

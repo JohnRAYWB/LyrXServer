@@ -25,8 +25,8 @@ export class AlbumController {
     }
 
     @Get('top')
-    getMostLiked(@Query('page') page: number) {
-        return this.albumService.getMostLiked(page)
+    getMostLiked() {
+        return this.albumService.getMostLiked()
     }
 
     @Get(':id/current')

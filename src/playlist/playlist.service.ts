@@ -30,8 +30,8 @@ export class PlaylistService {
         return playlists
     }
 
-    async getMostLiked(page = 0): Promise<Playlist[]> {
-        const playlists = await this.playlistModel.find().sort({favorites: -1}).skip(page).limit(5)
+    async getMostLiked(): Promise<Playlist[]> {
+        const playlists = await this.playlistModel.find().sort({favorites: -1}).limit(10)
 
         return playlists
     }

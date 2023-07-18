@@ -19,16 +19,20 @@ export class GenreService {
        @InjectModel(Album.name) private albumModel: Model<AlbumDocument>,
     ) {}
 
-    async getAllGenres(): Promise<Genre[]> {
+    async getAllGenres(limit = 10, page = 0): Promise<Genre[]> {
 
-        const genresList = await this.genreModel.find()
+        const genresList = await this.genreModel.find().skip(page).limit(limit)
 
         return genresList
     }
 
     async getGenreById(gId: ObjectId): Promise<Genre> {
 
-        const genre = await this.genreModel.findById(gId).populate(['tracks', 'playlists', 'albums'])
+        const genre = await this.genreModel.findById(gId).populate([
+            {path: 'tracks', populate: 'album artist'},
+            {path: 'playlists', populate: 'tracks'},
+            {path: 'albums', populate: 'tracks'},
+        ])
 
         return genre
     }

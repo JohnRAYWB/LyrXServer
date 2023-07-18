@@ -19,8 +19,8 @@ export class UserController {
     }
 
     @Get()
-    getUsers() {
-        return this.userService.getAllUsers()
+    getUsers(@Query('limit') limit: number, @Query('page') page: number) {
+        return this.userService.getAllUsers(limit, page)
     }
 
     @Get('profile/:id')
@@ -29,8 +29,8 @@ export class UserController {
     }
 
     @Get('search')
-    searchUserByName(@Query('username') username: string) {
-        return this.userService.searchUserByName(username)
+    searchUserByName(@Query('username') username: string, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.userService.searchUserByName(username, limit, page)
     }
 
     @Get('collection')
@@ -86,10 +86,5 @@ export class UserController {
     @Post('ban/:id')
     banUser(@Param('id') uId: ObjectId, @Body('reason') banReason: string) {
         return this.userService.banUser(uId, banReason)
-    }
-
-    @Post('unsubscribe/:id')
-    unsubscribe(@Request() req, @Param('id') uId: ObjectId) {
-        return this.userService.unsubscribe(uId, req.user.id)
     }
 }
