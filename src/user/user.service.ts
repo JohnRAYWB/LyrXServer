@@ -43,7 +43,7 @@ export class UserService {
                 {path: 'followers', populate: 'roles'},
                 {path: 'followings', populate: 'roles'},
                 {path: 'tracks', populate: 'album'},
-                {path: 'tracksCollection'},
+                {path: 'tracksCollection', populate: 'album'},
                 {path: 'playlists'},
                 {path: 'playlistsCollection'},
                 {path: 'albums'},
@@ -65,11 +65,12 @@ export class UserService {
 
     async getOwnCollection(uId: ObjectId): Promise<Track[]> {
 
-        const user = await this.userModel.findById(uId).populate(['tracks', 'tracksCollection'])
-        const {tracks, tracksCollection} = user
-        const collection = [].concat(tracks, tracksCollection)
+        const user = await this.userModel.findById(uId).populate([
+            {path: 'tracksCollection', populate: 'artist album'}
+        ])
+        const {tracksCollection} = user
 
-        return collection
+        return tracksCollection
     }
 
     async getOwnPlaylists(uId: ObjectId): Promise<Playlist[] | Album []> {

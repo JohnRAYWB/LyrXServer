@@ -65,7 +65,9 @@ export class TrackService {
 
         const track = await this.trackModel.find({
             name: {$regex: new RegExp(name, 'i')}
-        }).populate('album')
+        }).populate([
+            {path: 'album'},
+        ])
 
         return track
     }
@@ -198,13 +200,13 @@ export class TrackService {
         return 'Image successfully updated'
     }
 
-    async editCommentById(uId: ObjectId, tId: ObjectId, text: string): Promise<any> {
+    async editCommentById(uId: ObjectId, cId: ObjectId, text: string): Promise<any> {
 
-        const comment = await this.commentModel.findById(tId)
+        const comment = await this.commentModel.findById(cId)
 
         try {
             if (uId.toString() === comment.user.toString()) {
-                await comment.updateOne({$set: {text: text}})
+                await comment.updateOne({$set: {text: text}, $inc: {__v: 1}})
 
                 return 'Comment successfully changed'
             } else {
@@ -233,9 +235,9 @@ export class TrackService {
         return 'Track remove from your playlist successfully'
     }
 
-    async deleteCommentById(uId: ObjectId, tId: ObjectId): Promise<any> {
+    async deleteCommentById(uId: ObjectId, cId: ObjectId): Promise<any> {
 
-        const comment = await this.commentModel.findById(tId).populate(['user', 'track'])
+        const comment = await this.commentModel.findById(cId).populate(['user', 'track'])
         const user = await this.userModel.findById(uId).populate('roles')
 
         try {

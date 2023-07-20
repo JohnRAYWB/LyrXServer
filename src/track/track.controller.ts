@@ -115,8 +115,8 @@ export class TrackController {
     }
 
     @Patch('comment/:id/edit')
-    editCommentById(@Request() req, @Param('id') tId: ObjectId, @Body('text') text: string) {
-        return this.trackService.editCommentById(req.user.id, tId, text)
+    editCommentById(@Request() req, @Param('id') cId: ObjectId, @Body('text') text: string) {
+        return this.trackService.editCommentById(req.user.id, cId, text)
     }
 
     @Post('genre/:id/remove')
@@ -135,8 +135,8 @@ export class TrackController {
     }
 
     @Delete('comment/:id/delete')
-    deleteCommentById(@Request() req, @Param('id') tId: ObjectId) {
-        return this.trackService.deleteCommentById(req.user.id, tId)
+    deleteCommentById(@Request() req, @Param('id') cId: ObjectId) {
+        return this.trackService.deleteCommentById(req.user.id, cId)
     }
 
     @Roles('admin', 'artist')
