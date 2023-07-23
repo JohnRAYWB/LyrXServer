@@ -39,9 +39,11 @@ export class PlaylistService {
     async getPlaylistById(pId: ObjectId): Promise<Playlist> {
 
         const playlist = await this.playlistModel.findById(pId)
-            .populate(['user', 'genre'])
-            .populate({path: 'tracks', populate: 'album'})
-
+            .populate([
+                {path: 'user', select: '-password'},
+                {path: 'genre'},
+                {path: 'tracks', populate: 'album'}
+            ])
         return playlist
     }
 

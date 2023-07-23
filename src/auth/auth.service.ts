@@ -20,7 +20,7 @@ export class AuthService {
 
         try {
 
-            const user = await this.userService.getUserByEmail(dto.email)
+            const user = await this.userService.getUserForAuth(dto.email)
             const encrypt = await bcrypt.compare(dto.password, user.password)
 
             if (!user || !encrypt) {
@@ -36,7 +36,7 @@ export class AuthService {
     async signUp(dto: createUserDto): Promise<any> {
 
         try {
-            const candidate = await this.userService.getUserByEmail(dto.email)
+            const candidate = await this.userService.getUserForAuth(dto.email)
 
             if(candidate) {
                 throw new UnauthorizedException('AuthService: Email used already')

@@ -24,12 +24,16 @@ export class UserService {
 
     async getAllUsers(limit = 10, page = 0): Promise<User[]> {
 
-        const usersList = await this.userModel.find().skip(page).limit(limit)
+        const usersList = await this.userModel
+            .find()
+            .skip(page)
+            .limit(limit)
+            .select('-password')
 
         return usersList
     }
 
-    async getUserByEmail(email: string): Promise<User> {
+    async getUserForAuth(email: string): Promise<User> {
 
         const user = await this.userModel.findOne({email: email}).populate('roles')
 
@@ -40,8 +44,8 @@ export class UserService {
 
         const user = await this.userModel.findById(uId)
             .populate([
-                {path: 'followers', populate: 'roles'},
-                {path: 'followings', populate: 'roles'},
+                {path: 'followers', populate: 'roles', select: '-password'},
+                {path: 'followings', populate: 'roles', select: '-password'},
                 {path: 'tracks', populate: 'album'},
                 {path: 'tracksCollection', populate: 'album'},
                 {path: 'playlists'},
@@ -49,7 +53,7 @@ export class UserService {
                 {path: 'albums'},
                 {path: 'albumsCollection'},
                 {path: 'roles'},
-            ])
+            ]).select('-password')
 
         return user
     }
@@ -58,7 +62,7 @@ export class UserService {
 
         const userList = await this.userModel.find({
             username: {$regex: new RegExp(username, 'i')}
-        }).populate('roles').skip(page).limit(limit)
+        }).populate('roles').skip(page).limit(limit).select('-password')
 
         return userList
     }
@@ -161,15 +165,15 @@ export class UserService {
         const subscriber = await this.userModel.findById(sId)
 
         try {
-                if (!subscriber.followings.find(f => f.toString() === uId.toString())) {
-                    await user.updateOne({$addToSet: {followers: sId}})
-                    await subscriber.updateOne({$addToSet: {followings: uId}})
-                    return 'Thanks for subscribe'
-                } else {
-                    await user.updateOne({$pull: {followers: sId}})
-                    await subscriber.updateOne({$pull: {followings: uId}})
-                    return 'You are unsubscribed successfully'
-                }
+            if (!subscriber.followings.find(f => f.toString() === uId.toString())) {
+                await user.updateOne({$addToSet: {followers: sId}})
+                await subscriber.updateOne({$addToSet: {followings: uId}})
+                return 'Thanks for subscribe'
+            } else {
+                await user.updateOne({$pull: {followers: sId}})
+                await subscriber.updateOne({$pull: {followings: uId}})
+                return 'You are unsubscribed successfully'
+            }
         } catch (e) {
             this.userException(e)
         }

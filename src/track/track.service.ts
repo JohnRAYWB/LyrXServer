@@ -52,8 +52,8 @@ export class TrackService {
 
         const track = await this.trackModel.findById(tId)
             .populate([
-                {path: 'comments', populate: 'user'},
-                {path: 'artist'},
+                {path: 'comments', populate: {path: 'user', select: '-password'}},
+                {path: 'artist', select: '-password'},
                 {path: 'album'},
                 {path: 'genre'}
             ])

@@ -28,7 +28,7 @@ export class AlbumService {
     ) {
     }
 
-    async getAllAlbums(limit = 10 , page = 0): Promise<Album[]> {
+    async getAllAlbums(limit = 10, page = 0): Promise<Album[]> {
 
         const albumsList = await this.albumModel.find().limit(limit).skip(page)
 
@@ -44,8 +44,12 @@ export class AlbumService {
 
     async getAlbumById(aId: ObjectId): Promise<Album> {
 
-        const album = await this.albumModel.findById(aId).populate(['artist', 'genre'])
-            .populate({path: 'tracks', populate: 'album'})
+        const album = await this.albumModel.findById(aId)
+            .populate([
+                {path: 'artist', select: '-password'},
+                {path: 'genre'},
+                {path: 'tracks', populate: 'album'},
+            ])
 
         return album
     }

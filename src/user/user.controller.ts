@@ -4,11 +4,8 @@ import {Roles} from "../role/role.guard";
 import {birthDto} from "./dto/birth.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {ObjectId} from "mongoose";
-import MongooseClassSerializerInterceptor from "../serialization/mongoose.class.serializer";
-import {User} from "./schema/user.schema";
 
 @Controller('users')
-// @UseInterceptors(MongooseClassSerializerInterceptor(User))
 export class UserController {
 
     constructor(private userService: UserService) {}
