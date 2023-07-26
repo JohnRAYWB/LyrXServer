@@ -62,37 +62,19 @@ export class UserService {
 
         const userList = await this.userModel.find({
             username: {$regex: new RegExp(username, 'i')}
-        }).populate('roles').skip(page).limit(limit).select('-password')
+        }).populate([
+            {path: 'roles'},
+            {path: 'comments'}
+        ]).skip(page).limit(limit).select('-password')
 
         return userList
-    }
-
-    async getOwnCollection(uId: ObjectId): Promise<Track[]> {
-
-        const user = await this.userModel.findById(uId).populate([
-            {path: 'tracksCollection', populate: 'artist album'}
-        ])
-        const {tracksCollection} = user
-
-        return tracksCollection
-    }
-
-    async getOwnPlaylists(uId: ObjectId): Promise<Playlist[] | Album []> {
-
-        const user = await this.userModel.findById(uId).populate([
-            'playlists', 'playlistsCollection', 'albums', 'albumsCollection'
-        ])
-        const {playlists, playlistsCollection, albums, albumsCollection} = user
-        const collections = [].concat(playlists, playlistsCollection, albums, albumsCollection)
-
-        return collections
     }
 
     async createUser(dto: createUserDto): Promise<User> {
 
         try {
             const role = await this.roleService.getRole('user')
-            const user = await this.userModel.create({...dto, roles: role})
+            const user = await this.userModel.create({...dto, roles: role, createdTime: Date.now()})
 
             return user
         } catch (e) {

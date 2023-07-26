@@ -41,6 +41,9 @@ export class User {
     @Prop()
     banReason: String[]
 
+    @Prop({type: Date})
+    createdTime: Date
+
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'User'}]})
     @Type(() => User)
     followers: User[]

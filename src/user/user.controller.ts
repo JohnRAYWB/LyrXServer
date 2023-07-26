@@ -30,16 +30,6 @@ export class UserController {
         return this.userService.searchUserByName(username, limit, page)
     }
 
-    @Get('collection')
-    getOwnCollection(@Request() req) {
-        return this.userService.getOwnCollection(req.user.id)
-    }
-
-    @Get('playlists')
-    getOwnPlaylists(@Request() req) {
-        return this.userService.getOwnPlaylists(req.user.id)
-    }
-
     @Post('profile/about')
     addAbout(@Request() req, @Body('about') about: string) {
         return this.userService.addAbout(req.user.id, about)
