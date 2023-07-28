@@ -20,11 +20,6 @@ export class UserController {
         return this.userService.getAllUsers(limit, page)
     }
 
-    @Get('artists')
-    getArtists() {
-        return this.userService.getAllArtists()
-    }
-
     @Get('profile/:id')
     getUserById(@Param('id') uId: ObjectId) {
         return this.userService.getUserById(uId)
@@ -33,6 +28,11 @@ export class UserController {
     @Get('search')
     searchUserByName(@Query('username') username: string, @Query('limit') limit: number, @Query('page') page: number) {
         return this.userService.searchUserByName(username, limit, page)
+    }
+
+    @Get('artists/search')
+    getArtists(@Query('username') username: string) {
+        return this.userService.getAllArtists(username)
     }
 
     @Post('profile/about')

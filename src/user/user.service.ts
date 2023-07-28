@@ -30,14 +30,6 @@ export class UserService {
         return usersList
     }
 
-    async getAllArtists(): Promise<User[]> {
-        const users = await this.userModel.find().populate('roles')
-
-        const artists = users.filter(user => user.roles.find(role => role.role === 'artist'))
-
-        return artists
-    }
-
     async getUserForAuth(email: string): Promise<User> {
 
         const user = await this.userModel.findOne({email: email}).populate('roles')
@@ -75,6 +67,18 @@ export class UserService {
             .select('-password')
 
         return userList
+    }
+
+
+    async getAllArtists(username: string): Promise<User[]> {
+        const users = await this.userModel.find({
+            username: {$regex: new RegExp(username, 'i')}
+        })
+            .populate('roles')
+
+        const artists = users.filter(user => user.roles.find(role => role.role === 'artist'))
+
+        return artists
     }
 
     async createUser(dto: createUserDto): Promise<User> {
