@@ -6,9 +6,6 @@ import {RoleService} from "../role/role.service";
 import {createUserDto} from "./dto/create.user.dto";
 import {birthDto} from "./dto/birth.dto";
 import {FileService, FileType} from "../file/file.service";
-import {Track} from "../track/schema/track.schema";
-import {Playlist} from "../playlist/schema/playlist.schema";
-import {Album} from "../album/schema/album.schema";
 
 @Injectable()
 export class UserService {
@@ -31,6 +28,14 @@ export class UserService {
             .select('-password')
 
         return usersList
+    }
+
+    async getAllArtists(): Promise<User[]> {
+        const users = await this.userModel.find().populate('roles')
+
+        const artists = users.filter(user => user.roles.find(role => role.role === 'artist'))
+
+        return artists
     }
 
     async getUserForAuth(email: string): Promise<User> {
@@ -149,7 +154,7 @@ export class UserService {
         const subscriber = await this.userModel.findById(sId)
 
         try {
-            if (!subscriber.followings.find(f => f.toString() === uId.toString())) {
+            if (subscriber.followings.findIndex(f => f.toString() === uId.toString()) === -1) {
                 await user.updateOne({$addToSet: {followers: sId}})
                 await subscriber.updateOne({$addToSet: {followings: uId}})
                 return 'Thanks for subscribe'
@@ -170,7 +175,7 @@ export class UserService {
 
         try {
             if (add) {
-                if (!user.roles.find(r => r.role === rName)) {
+                if (user.roles.findIndex(r => r.role === rName) === -1) {
                     await user.updateOne({$addToSet: {roles: role._id}})
                 } else {
                     throw new HttpException('User has this role already', HttpStatus.BAD_REQUEST)
@@ -178,7 +183,7 @@ export class UserService {
             }
 
             if (!add) {
-                if (user.roles.find(r => r.role === rName)) {
+                if (user.roles.findIndex(r => r.role === rName) !== -1) {
                     await user.updateOne({$pull: {roles: role._id}})
                 } else {
                     throw new HttpException('User has not this role', HttpStatus.BAD_REQUEST)
