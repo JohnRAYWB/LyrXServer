@@ -32,6 +32,11 @@ export class TrackController {
         return this.trackService.getMostLiked()
     }
 
+    @Get('listen')
+    getMostListens() {
+        return this.trackService.getMostListens()
+    }
+
     @Get(':id/current')
     getTrackById(@Param('id') tId: ObjectId) {
         return this.trackService.getTrackById(tId)

@@ -65,7 +65,9 @@ export class UserService {
         }).populate([
             {path: 'roles'},
             {path: 'comments'}
-        ]).skip(page).limit(limit).select('-password')
+        ]).skip(page)
+            .limit(limit)
+            .select('-password')
 
         return userList
     }

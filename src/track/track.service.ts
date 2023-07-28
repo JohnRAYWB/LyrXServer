@@ -40,6 +40,12 @@ export class TrackService {
         return tracks
     }
 
+    async getMostListens(): Promise<Track[]> {
+        const tracks = await this.trackModel.find().sort({listens: -1}).limit(10)
+
+        return tracks
+    }
+
     async getTracksByGenre(gId: ObjectId): Promise<Track[]> {
         const tracksList = await this.trackModel.find({
             genre: gId
@@ -84,7 +90,8 @@ export class TrackService {
                 name: tName,
                 artist: user._id,
                 audio: audioFile,
-                image: imageFile
+                image: imageFile,
+                createdTime: Date.now()
             })
             await user.updateOne({$addToSet: {tracks: track._id}})
 
@@ -167,19 +174,25 @@ export class TrackService {
 
         const track = await this.trackModel.findById(tId).populate('artist')
         const trackOwner = await this.userModel.findById(track.artist._id).populate('tracks')
-        const newOwner = await this.userModel.findById(uId)
+        const newOwner = await this.userModel.findById(uId).populate('roles')
+
+        const newOwnerName = newOwner.username
+        const trackName = track.name.pop()
 
         try {
-            if (!track.protectedDeletion && newOwner && newOwner._id !== trackOwner._id) {
+            if (!track.protectedDeletion && newOwner._id !== trackOwner._id) {
+                if(newOwner.roles.findIndex(role => role.role === 'artist') !== -1) {
+                    this.fileService.moveFile(track.audio, 'audio', 'track', trackOwner.username, newOwner.username)
+                    this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, newOwner.username)
 
-                this.fileService.moveFile(track.audio, 'audio', 'track', trackOwner.username, newOwner.username)
-                this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, newOwner.username)
+                    await trackOwner.updateOne({$pull: {tracks: track._id}})
+                    await track.updateOne({$set: {artist: newOwner._id, name: [newOwnerName, trackName]}})
+                    await newOwner.updateOne({$addToSet: {tracks: track._id}})
 
-                await trackOwner.updateOne({$pull: {tracks: track._id}})
-                await track.updateOne({$set: {artist: newOwner._id}})
-                await newOwner.updateOne({$addToSet: {tracks: track._id}})
-
-                return 'Artist successfully updated'
+                    return 'Artist successfully updated'
+                }else {
+                    throw new HttpException('Current user is not an artist', HttpStatus.BAD_REQUEST)
+                }
             } else {
                 throw new HttpException('Permission denied', HttpStatus.BAD_REQUEST)
             }
@@ -294,7 +307,7 @@ export class TrackService {
         try {
             if (track.artist.toString() === uId.toString()) {
                 if (add) {
-                    if (!track.genre.find(g => g.toString() === gId.toString())) {
+                    if (track.genre.findIndex(g => g.toString() === gId.toString()) === -1) {
                         await this.genreService.addEntityToGenre(gId, tId, 'track')
                         await track.updateOne({$addToSet: {genre: gId}})
                     } else {
@@ -303,7 +316,7 @@ export class TrackService {
                 }
 
                 if (!add) {
-                    if (track.genre.find(g => g.toString() === gId.toString())) {
+                    if (track.genre.findIndex(g => g.toString() === gId.toString()) !== -1) {
                         await this.genreService.removeEntityFromGenre(gId, tId, 'track')
                         await track.updateOne({$pull: {genre: gId}})
                     } else {
@@ -325,7 +338,7 @@ export class TrackService {
 
         try {
             if (add) {
-                if (!user.tracksCollection.find(t => t.toString() === tId.toString())) {
+                if (user.tracksCollection.findIndex(t => t.toString() === tId.toString()) === -1) {
                     await track.updateOne({$inc: {favorites: 1}})
                     await user.updateOne({$addToSet: {tracksCollection: track._id}})
                 } else {
@@ -334,7 +347,7 @@ export class TrackService {
             }
 
             if (!add) {
-                if (user.tracksCollection.find(t => t.toString() === tId.toString())) {
+                if (user.tracksCollection.findIndex(t => t.toString() === tId.toString()) !== -1) {
                     await track.updateOne({$inc: {favorites: -1}})
                     await user.updateOne({$pull: {tracksCollection: track._id}})
                 } else {
@@ -354,7 +367,7 @@ export class TrackService {
         try {
             if (playlist.user.toString() === uId.toString()) {
                 if (add) {
-                    if (!playlist.tracks.find(t => t.toString() === tId.toString())) {
+                    if (playlist.tracks.findIndex(t => t.toString() === tId.toString()) === -1) {
                         await playlist.updateOne({$addToSet: {tracks: tId}})
                         await track.updateOne({$inc: {favorites: 1}})
                     } else {
@@ -363,7 +376,7 @@ export class TrackService {
                 }
 
                 if (!add) {
-                    if (playlist.tracks.find(t => t.toString() === tId.toString())) {
+                    if (playlist.tracks.findIndex(t => t.toString() === tId.toString()) !== -1) {
                         await playlist.updateOne({$pull: {tracks: tId}})
                         await track.updateOne({$inc: {favorites: -1}})
                     } else {

@@ -36,6 +36,9 @@ export class Track {
     @Prop({default: false})
     protectedDeletion: boolean
 
+    @Prop({type: Date})
+    createdTime: Date
+
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
     @Type(() => User)
     artist: User
