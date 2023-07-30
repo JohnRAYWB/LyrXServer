@@ -19,9 +19,9 @@ export class GenreService {
        @InjectModel(Album.name) private albumModel: Model<AlbumDocument>,
     ) {}
 
-    async getAllGenres(limit = 10, page = 0): Promise<Genre[]> {
+    async getAllGenres(): Promise<Genre[]> {
 
-        const genresList = await this.genreModel.find().skip(page).limit(limit)
+        const genresList = await this.genreModel.find()
 
         return genresList
     }

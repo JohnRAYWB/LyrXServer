@@ -14,10 +14,10 @@ export class Genre {
     @Transform(({obj}) => obj._id.toString())
     _id: ObjectId
 
-    @Prop()
+    @Prop({required: true})
     name: string
 
-    @Prop()
+    @Prop({required: true})
     description: string
 
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Track'}]})

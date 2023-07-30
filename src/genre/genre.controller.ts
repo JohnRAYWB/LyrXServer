@@ -12,8 +12,8 @@ export class GenreController {
     ) {}
 
     @Get()
-    getAllGenres(@Query('limit') limit: number, @Query('page') page: number) {
-        return this.genreService.getAllGenres(limit, page)
+    getAllGenres() {
+        return this.genreService.getAllGenres()
     }
 
     @Get(':id')
