@@ -75,7 +75,8 @@ export class PlaylistService {
                 description: description,
                 user: user._id,
                 favorites: 0,
-                image: imagePath
+                image: imagePath,
+                createdTime: Date.now()
             })
 
             await user.updateOne({$push: {playlists: playlist._id}})
@@ -117,7 +118,7 @@ export class PlaylistService {
         const playlist = await this.playlistModel.findById(pId).populate('user')
 
         try {
-            if (uId.toString() === playlist.user._id.toString() || user.roles.find(r => r.role === 'admin')) {
+            if (uId.toString() === playlist.user._id.toString() || user.roles.findIndex(r => r.role === 'admin') !== -1) {
                 await this.userModel.find().updateMany({}, {
                     $pullAll: {
                         playlists: [playlist],
@@ -147,7 +148,7 @@ export class PlaylistService {
         try {
             if (playlist.user.toString() === uId.toString()) {
                 if (add) {
-                    if (!playlist.genre.find(g => g.toString() === gId.toString())) {
+                    if (playlist.genre.findIndex(g => g.toString() === gId.toString()) === -1) {
                         await this.genreService.addEntityToGenre(gId, pId, 'playlist')
                         await playlist.updateOne({$addToSet: {genre: gId}})
                     } else {
@@ -156,7 +157,7 @@ export class PlaylistService {
                 }
 
                 if (!add) {
-                    if (playlist.genre.find(g => g.toString() === gId.toString())) {
+                    if (playlist.genre.findIndex(g => g.toString() === gId.toString()) !== -1) {
                         await this.genreService.removeEntityFromGenre(gId, pId, 'playlist')
                         await playlist.updateOne({$pull: {genre: gId}})
                     } else {
@@ -178,7 +179,7 @@ export class PlaylistService {
 
         try {
             if (add) {
-                if (!user.playlistsCollection.find(p => p.toString() === pId.toString())) {
+                if (user.playlistsCollection.findIndex(p => p.toString() === pId.toString()) === -1) {
                     await user.updateOne({$addToSet: {playlistsCollection: pId}})
                     await playlist.updateOne({$inc: {favorites: 1}})
                 } else {
@@ -187,7 +188,7 @@ export class PlaylistService {
             }
 
             if (!add) {
-                if (user.playlistsCollection.find(p => p.toString() === pId.toString())) {
+                if (user.playlistsCollection.findIndex(p => p.toString() === pId.toString()) !== -1) {
                     await user.updateOne({$pull: {playlistsCollection: pId}})
                     await playlist.updateOne({$inc: {favorites: -1}})
                 } else {

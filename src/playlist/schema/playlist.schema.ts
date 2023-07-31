@@ -26,6 +26,9 @@ export class Playlist {
     @Prop({default: 0})
     favorites: number
 
+    @Prop({type: Date})
+    createdTime: Date
+
     @Prop({type: mongoose.Schema.Types.ObjectId, ref: 'User'})
     @Type(() => User)
     user: User

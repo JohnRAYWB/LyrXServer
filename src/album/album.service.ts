@@ -1,7 +1,7 @@
 import {HttpException, HttpStatus, Injectable} from "@nestjs/common";
 import {InjectModel} from "@nestjs/mongoose";
 import {Album, AlbumDocument} from "./schema/album.schema";
-import {Model, ObjectId} from "mongoose";
+import {Model, ObjectId, Schema} from "mongoose";
 import {User, UserDocument} from "../user/schema/user.schema";
 import {Track, TrackDocument} from "../track/schema/track.schema";
 import {FileService, FileType} from "../file/file.service";
@@ -67,7 +67,9 @@ export class AlbumService {
 
         const albumsList = await this.albumModel.find({
             name: {$regex: new RegExp(name, 'i')}
-        })
+        }).populate([
+            {path: 'tracks'}
+        ])
 
         return albumsList
     }
@@ -82,7 +84,8 @@ export class AlbumService {
                 artist: artist._id,
                 name: aName,
                 description: dto.description,
-                image: imagePath
+                image: imagePath,
+                createdTime: Date.now()
             })
 
             audio.map(async a => {
@@ -94,7 +97,8 @@ export class AlbumService {
                     audio: audio,
                     image: imagePath,
                     album: album._id,
-                    protectedDeletion: true
+                    protectedDeletion: true,
+                    createdTime: Date.now()
                 })
 
                 await artist.updateOne({$addToSet: {tracks: track._id}})
@@ -151,7 +155,7 @@ export class AlbumService {
         const album = await this.albumModel.findById(aId).populate(['artist', 'tracks'])
 
         try {
-            if (album.artist._id.toString() === user._id.toString() || user.roles.find(r => r.role === 'admin')) {
+            if (album.artist._id.toString() === user._id.toString() || user.roles.findIndex(r => r.role === 'admin') !== -1) {
                 for (let track of album.tracks) {
                     await this.removeTrackFromAlbum(uId, track._id, aId)
                 }
@@ -182,7 +186,7 @@ export class AlbumService {
         try {
             if (album.artist.toString() === uId.toString()) {
                 if (add) {
-                    if (!album.genre.find(g => g.toString() === gId.toString())) {
+                    if (album.genre.findIndex(g => g.toString() === gId.toString()) === -1) {
                         await this.genreService.addEntityToGenre(gId, aId, 'album')
                         await album.updateOne({$addToSet: {genre: gId}})
                     } else {
@@ -191,7 +195,7 @@ export class AlbumService {
                 }
 
                 if (!add) {
-                    if (album.genre.find(g => g.toString() === gId.toString())) {
+                    if (album.genre.findIndex(g => g.toString() === gId.toString()) !== -1) {
                         await this.genreService.removeEntityFromGenre(gId, aId, 'album')
                         await album.updateOne({$pull: {genre: gId}})
                     } else {
@@ -213,10 +217,10 @@ export class AlbumService {
         const album = await this.albumModel.findById(aId)
 
         try {
-            if (track.artist.toString() === uId.toString() || user.roles.find(r => r.role === 'admin')) {
+            if (track.artist.toString() === uId.toString() || user.roles.findIndex(r => r.role === 'admin') !== -1) {
                 if (add) {
-                    if (!album.tracks.find(t => t.toString() === tId.toString())) {
-                        this.fileService.removeFile(track.image, 'track', user.username)
+                    if (album.tracks.findIndex(t => t.toString() === tId.toString()) === -1) {
+                        this.fileService.removeFile(track.image, 'track', track.name.shift())
                         await track.updateOne({$set: {album: aId, image: album.image, protectedDeletion: true}})
                         await album.updateOne({$addToSet: {tracks: tId}})
                     } else {
@@ -225,8 +229,8 @@ export class AlbumService {
                 }
 
                 if (!add) {
-                    if (album.tracks.find(t => t.toString() === tId.toString())) {
-                        const imagePath = this.fileService.copyFile(album.image, 'image', 'album', 'track', user.username)
+                    if (album.tracks.findIndex(t => t.toString() === tId.toString()) !== -1) {
+                        const imagePath = this.fileService.copyFile(album.image, 'image', 'album', 'track', track.name.shift())
                         await track.updateOne({$unset: {album: ''}, $set: {image: imagePath, protectedDeletion: false}})
                         await album.updateOne({$pull: {tracks: tId}})
                     } else {
@@ -248,7 +252,7 @@ export class AlbumService {
 
         try {
             if (add) {
-                if (!user.albumsCollection.find(p => p.toString() === aId.toString())) {
+                if (user.albumsCollection.findIndex(p => p.toString() === aId.toString()) === -1) {
                     await user.updateOne({$addToSet: {albumsCollection: aId}})
                     await album.updateOne({$inc: {favorites: 1}})
                 } else {
@@ -257,7 +261,7 @@ export class AlbumService {
             }
 
             if (!add) {
-                if (user.albumsCollection.find(p => p.toString() === aId.toString())) {
+                if (user.albumsCollection.findIndex(p => p.toString() === aId.toString()) !== -1) {
                     await user.updateOne({$pull: {albumsCollection: aId}})
                     await album.updateOne({$inc: {favorites: -1}})
                 } else {
