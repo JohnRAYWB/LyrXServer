@@ -54,6 +54,9 @@ export class Track {
     @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}]})
     @Type(() => Comment)
     comments: Comment[]
+
+    @Prop({default: 0})
+    commentCount: number
 }
 
 export const TrackSchema = SchemaFactory.createForClass(Track)

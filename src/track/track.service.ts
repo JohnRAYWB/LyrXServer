@@ -27,9 +27,9 @@ export class TrackService {
     ) {
     }
 
-    async getAllTracks(limit = 10, page = 0): Promise<Track[]> {
+    async getAllTracks(limit: number, page: number): Promise<Track[]> {
 
-        const tracksList = await this.trackModel.find().skip(page).limit(limit)
+        const tracksList = await this.trackModel.find().populate('album').skip(page).limit(limit)
 
         return tracksList
     }
@@ -42,6 +42,31 @@ export class TrackService {
 
     async getMostListens(): Promise<Track[]> {
         const tracks = await this.trackModel.find().sort({listens: -1}).limit(10)
+
+        return tracks
+    }
+
+    async getArtistsTracks(uId: ObjectId, sort?: string): Promise<Track[]> {
+
+        let tracks
+
+        if(sort === 'listens') {
+            tracks = await this.trackModel.find({
+                artist: uId
+            }).sort({listens: -1})
+        } else if(sort === 'favorites') {
+            tracks = await this.trackModel.find({
+                artist: uId
+            }).sort({favorites: -1})
+        } else if(sort === 'comment') {
+            tracks = await this.trackModel.find({
+                artist: uId
+            }).sort({commentCount: -1})
+        } else {
+            tracks = await this.trackModel.find({
+                artist: uId
+            })
+        }
 
         return tracks
     }
@@ -95,6 +120,13 @@ export class TrackService {
             })
             await user.updateOne({$addToSet: {tracks: track._id}})
 
+            for(let gId of dto.genres) {
+                const genre = await this.genreModel.findById(gId)
+
+                await track.updateOne({$addToSet: {genre: gId}})
+                await genre.updateOne({$addToSet: {tracks: track._id}})
+            }
+
             return track
         } catch (e) {
             throw this.trackException(e)
@@ -134,7 +166,7 @@ export class TrackService {
             if (!user.ban) {
                 const comment = await this.commentModel.create({user: user._id, text: text, track: track._id})
                 await user.updateOne({$addToSet: {comments: comment._id}})
-                await track.updateOne({$addToSet: {comments: comment._id}})
+                await track.updateOne({$addToSet: {comments: comment._id}, $inc: {commentCount: 1}})
 
                 return 'Comment add successfully'
             } else {
@@ -256,7 +288,7 @@ export class TrackService {
         try {
             if (user['id'] === comment.user['id'] || user.roles.find(role => role.role === 'admin')) {
                 await user.updateOne({$pull: {comments: comment['id']}})
-                await this.trackModel.findByIdAndUpdate(comment.track['id'], {$pull: {comments: comment['id']}})
+                await this.trackModel.findByIdAndUpdate(comment.track['id'], {$pull: {comments: comment['id']}, $inc: {commentCount: -1}})
 
                 comment.deleteOne()
 

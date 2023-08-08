@@ -29,6 +29,11 @@ export class AlbumController {
         return this.albumService.getMostLiked()
     }
 
+    @Get('artist')
+    getArtistsAlbums(@Request() req) {
+        return this.albumService.getArtistsAlbums(req.user.id)
+    }
+
     @Get(':id/current')
     getAlbumById(@Param('id') aId: ObjectId) {
         return this.albumService.getAlbumById(aId)
@@ -46,7 +51,7 @@ export class AlbumController {
 
     @Roles('artist')
     @UseInterceptors(FileFieldsInterceptor([
-        {name: 'audio'},
+        {name: 'audio', maxCount: 20},
         {name: 'image', maxCount: 1}
     ]))
     @Post('drop')

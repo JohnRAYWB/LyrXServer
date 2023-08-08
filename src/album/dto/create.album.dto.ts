@@ -1,3 +1,4 @@
+import {Genre} from "../../genre/schema/genre.schema";
 
 export class createAlbumDto {
 
@@ -6,4 +7,6 @@ export class createAlbumDto {
     readonly description: string
 
     readonly trackName: String[]
+
+    readonly genres: Genre[]
 }

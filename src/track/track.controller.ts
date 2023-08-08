@@ -37,6 +37,11 @@ export class TrackController {
         return this.trackService.getMostListens()
     }
 
+    @Get('artist')
+    getArtistsTracks(@Request() req, @Query('sort') sort: string) {
+        return this.trackService.getArtistsTracks(req.user.id, sort)
+    }
+
     @Get(':id/current')
     getTrackById(@Param('id') tId: ObjectId) {
         return this.trackService.getTrackById(tId)
@@ -62,7 +67,6 @@ export class TrackController {
         const {audio, image} = files
         if(audio && image) {
             return this.trackService.createTrack(req.user['id'], dto, audio[0], image[0])
-
         } else {
             throw new HttpException(`You don't and image or audio! Audio: ${audio}; Image: ${image}`, HttpStatus.BAD_REQUEST)
         }

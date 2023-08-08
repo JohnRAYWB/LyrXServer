@@ -30,7 +30,12 @@ export class AlbumService {
 
     async getAllAlbums(limit = 10, page = 0): Promise<Album[]> {
 
-        const albumsList = await this.albumModel.find().limit(limit).skip(page)
+        const albumsList = await this.albumModel.find()
+            .limit(limit)
+            .skip(page)
+            .populate([
+            {path: 'tracks'}
+        ])
 
         return albumsList
     }
@@ -38,6 +43,17 @@ export class AlbumService {
     async getMostLiked() {
 
         const albums = await this.albumModel.find().sort({favorites: -1}).limit(10)
+
+        return albums
+    }
+
+    async getArtistsAlbums(uId): Promise<Album[]> {
+
+        const albums = await this.albumModel.find({
+            artist: uId
+        }).populate([
+            {path: 'tracks'}
+        ]).sort({favorites: -1})
 
         return albums
     }
@@ -87,6 +103,13 @@ export class AlbumService {
                 image: imagePath,
                 createdTime: Date.now()
             })
+
+            for(let gId of dto.genres) {
+                const genre = await this.genreModel.findById(gId)
+
+                await album.updateOne({$addToSet: {genre: gId}})
+                await genre.updateOne({$addToSet: {albums: album._id}})
+            }
 
             audio.map(async a => {
                 const trackName = [artist.username, dto.trackName.shift()]
