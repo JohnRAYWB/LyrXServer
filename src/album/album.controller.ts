@@ -59,9 +59,10 @@ export class AlbumController {
 
         const {audio, image} = files
         const trackNames = [].concat(dto.trackName)
+        const genres = [].concat(dto.genres)
 
         if(audio.length === trackNames.length && dto.trackName !== undefined) {
-            return this.albumService.createAlbum(req.user.id, {...dto, trackName: trackNames}, audio, image[0])
+            return this.albumService.createAlbum(req.user.id, {...dto, trackName: trackNames, genres: genres}, audio, image[0])
         } else {
             throw new HttpException(`You forgot add audio or track name. Audio length: ${audio.length}; Tracks name length: ${trackNames.length}, Track name: ${dto.trackName}`, HttpStatus.BAD_REQUEST)
         }

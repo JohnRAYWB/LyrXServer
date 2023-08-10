@@ -46,27 +46,40 @@ export class TrackService {
         return tracks
     }
 
-    async getArtistsTracks(uId: ObjectId, sort?: string): Promise<Track[]> {
+    async getArtistsSortedTracks(uId: ObjectId, sort: string): Promise<Track[]> {
 
         let tracks
 
         if(sort === 'listens') {
             tracks = await this.trackModel.find({
                 artist: uId
-            }).sort({listens: -1})
+            }).sort({listens: -1}).populate('album')
         } else if(sort === 'favorites') {
             tracks = await this.trackModel.find({
                 artist: uId
-            }).sort({favorites: -1})
+            }).sort({favorites: -1}).populate('album')
         } else if(sort === 'comment') {
             tracks = await this.trackModel.find({
                 artist: uId
-            }).sort({commentCount: -1})
-        } else {
-            tracks = await this.trackModel.find({
-                artist: uId
-            })
+            }).sort({commentCount: -1}).populate('album')
         }
+
+        return tracks
+    }
+
+    async getArtistsTracks(uId: ObjectId, limit: number, page: number): Promise<Track[]> {
+
+        const tracks = await this.trackModel.find({artist: uId}).populate('album').skip(page).limit(limit)
+
+        return tracks
+    }
+
+    async searchArtistsTrack(uId: ObjectId, name): Promise<Track[]> {
+
+        const tracks = await this.trackModel.find({
+            artist: uId,
+            name: {$regex: new RegExp(name, 'i')}
+        }).populate('album')
 
         return tracks
     }
@@ -426,6 +439,7 @@ export class TrackService {
     private async editFileControl(uId: ObjectId, tId: ObjectId, file, type): Promise<any> {
 
         const track = await this.trackModel.findById(tId).populate('artist')
+
         try {
             if (track && track.artist._id.toString() === uId.toString()) {
                 if (type === 'audio') {

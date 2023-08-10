@@ -34,8 +34,8 @@ export class AlbumService {
             .limit(limit)
             .skip(page)
             .populate([
-            {path: 'tracks'}
-        ])
+                {path: 'tracks'}
+            ])
 
         return albumsList
     }
@@ -104,7 +104,7 @@ export class AlbumService {
                 createdTime: Date.now()
             })
 
-            for(let gId of dto.genres) {
+            for (let gId of dto.genres) {
                 const genre = await this.genreModel.findById(gId)
 
                 await album.updateOne({$addToSet: {genre: gId}})

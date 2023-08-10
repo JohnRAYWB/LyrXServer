@@ -38,8 +38,18 @@ export class TrackController {
     }
 
     @Get('artist')
-    getArtistsTracks(@Request() req, @Query('sort') sort: string) {
-        return this.trackService.getArtistsTracks(req.user.id, sort)
+    getArtistsTracks(@Request() req, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.trackService.getArtistsTracks(req.user.id, limit, page)
+    }
+
+    @Get('artist/search')
+    searchArtistsTrack(@Request() req, @Query('name') name: string) {
+        return this.trackService.searchArtistsTrack(req.user.id, name)
+    }
+
+    @Get('artist/sorted')
+    getArtistsSortedTracks(@Request() req, @Query('sort') sort: string) {
+        return this.trackService.getArtistsSortedTracks(req.user.id, sort)
     }
 
     @Get(':id/current')
@@ -65,8 +75,10 @@ export class TrackController {
     ]))
     createTrack(@Request() req, @UploadedFiles() files, @Body() dto: createTrackDto) {
         const {audio, image} = files
+        const genres = [].concat(dto.genres)
+
         if(audio && image) {
-            return this.trackService.createTrack(req.user['id'], dto, audio[0], image[0])
+            return this.trackService.createTrack(req.user['id'], {...dto, genres: genres}, audio[0], image[0])
         } else {
             throw new HttpException(`You don't and image or audio! Audio: ${audio}; Image: ${image}`, HttpStatus.BAD_REQUEST)
         }

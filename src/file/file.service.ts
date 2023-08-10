@@ -63,8 +63,8 @@ export class FileService {
     updateFile(oldFile, newFile, type, route, entity?) {
 
         try{
-            this.removeFile(oldFile, route, entity)
             const file = this.createFile(type, newFile, route, entity)
+            this.removeFile(oldFile, route, entity)
 
             return file
         } catch {
