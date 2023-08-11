@@ -10,6 +10,7 @@ import {Comment, CommentDocument} from "../track/schema/comment.schema";
 import {Playlist, PlaylistDocument} from "../playlist/schema/playlist.schema";
 import {GenreService} from "../genre/genre.service";
 import {Genre, GenreDocument} from "../genre/schema/genre.schema";
+import {editAlbumDto} from "./dto/edit.album.dto";
 
 @Injectable()
 export class AlbumService {
@@ -47,13 +48,30 @@ export class AlbumService {
         return albums
     }
 
-    async getArtistsAlbums(uId): Promise<Album[]> {
+    async getArtistsSortedAlbums(uId: ObjectId): Promise<Album[]> {
 
         const albums = await this.albumModel.find({
             artist: uId
         }).populate([
             {path: 'tracks'}
         ]).sort({favorites: -1})
+
+        return albums
+    }
+
+    async getArtistsAlbums(uId: ObjectId, limit: number, page: number): Promise<Album[]> {
+
+        const albums = await this.albumModel.find({artist: uId}).skip(page).limit(limit)
+
+        return albums
+    }
+
+    async searchArtistsAlbums(uId: ObjectId, name: string): Promise<Album[]> {
+
+        const albums = await this.albumModel.find({
+            artist: uId,
+            name: {$regex: new RegExp(name, 'i')}
+        })
 
         return albums
     }
@@ -152,6 +170,55 @@ export class AlbumService {
 
         await this.albumCollectionControl(uId, aId, true)
         return 'Album add successfully'
+    }
+
+    async editAlbumDescription(uId: ObjectId, aId: ObjectId, dto: editAlbumDto): Promise<any> {
+
+        const album = await this.albumModel.findById(aId)
+
+        try {
+            if(album.artist.toString() === uId.toString()) {
+                if (dto.name) {
+                    await album.updateOne({$set: {name: dto.name}})
+                }
+
+                if (dto.description) {
+                    await album.updateOne({$set: {description: dto.description}})
+                }
+
+                return 'Changes update successfully'
+            } else {
+                throw new HttpException(`It's not your album`, HttpStatus.BAD_REQUEST)
+            }
+
+        } catch (e) {
+            throw this.albumException(e)
+        }
+
+    }
+
+    async editAlbumImage(uId: ObjectId, aId: ObjectId, image): Promise<any> {
+
+        const album = await this.albumModel.findById(aId).populate('artist')
+
+        try {
+            if(album.artist._id.toString() === uId.toString()) {
+                const imageFile = this.fileService.updateFile(album.image, image, FileType.IMAGE, 'album', album.artist.username)
+                await album.updateOne({$set: {image: imageFile}})
+
+                for(let tId of album.tracks) {
+                    const track = await this.trackModel.findById(tId)
+
+                    await track.updateOne({$set: {image: imageFile}})
+                }
+
+                return 'Image update successfully'
+            } else {
+                throw new HttpException(`It's not your album`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw this.albumException(e)
+        }
     }
 
     async removeGenre(uId: ObjectId, aId: ObjectId, gId: ObjectId): Promise<any> {

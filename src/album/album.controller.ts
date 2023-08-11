@@ -4,15 +4,16 @@ import {
     HttpException,
     HttpStatus, Param, Patch,
     Post, Query,
-    Request,
+    Request, UploadedFile,
     UploadedFiles,
     UseInterceptors
 } from "@nestjs/common";
 import {AlbumService} from "./album.service";
 import {Roles} from "../role/role.guard";
 import {createAlbumDto} from "./dto/create.album.dto";
-import {FileFieldsInterceptor} from "@nestjs/platform-express";
+import {FileFieldsInterceptor, FileInterceptor} from "@nestjs/platform-express";
 import {ObjectId} from "mongoose";
+import {editAlbumDto} from "./dto/edit.album.dto";
 
 @Controller('albums')
 export class AlbumController {
@@ -30,8 +31,18 @@ export class AlbumController {
     }
 
     @Get('artist')
-    getArtistsAlbums(@Request() req) {
-        return this.albumService.getArtistsAlbums(req.user.id)
+    getArtistsAlbums(@Request() req, @Query('limit') limit: number, @Query('page') page: number) {
+        return this.albumService.getArtistsAlbums(req.user.id, limit, page)
+    }
+
+    @Get('artist/search')
+    searchArtistsAlbums(@Request() req, @Query('name') name: string) {
+        return this.albumService.searchArtistsAlbums(req.user.id, name)
+    }
+
+    @Get('artist/sorted')
+    getArtistsSortedAlbums(@Request() req) {
+        return this.albumService.getArtistsSortedAlbums(req.user.id)
     }
 
     @Get(':id/current')
@@ -81,6 +92,17 @@ export class AlbumController {
     @Patch('track/:id/add')
     addTrackToAlbum(@Request() req, @Param('id') aId: ObjectId, @Body('track') tId: ObjectId) {
         return this.albumService.addTrackToAlbum(req.user.id, tId, aId)
+    }
+
+    @Patch('edit/:id/description')
+    editAlbumDescription(@Request() req, @Param('id') aId: ObjectId, @Body() dto: editAlbumDto) {
+        return this.albumService.editAlbumDescription(req.user.id, aId, dto)
+    }
+
+    @Patch('edit/:id/image')
+    @UseInterceptors(FileInterceptor('image'))
+    editAlbumImage(@Request() req, @Param('id') aId: ObjectId, @UploadedFile() image) {
+        return this.albumService.editAlbumImage(req.user.id, aId, image)
     }
 
     @Post('genre/:id/remove')
