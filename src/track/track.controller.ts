@@ -52,6 +52,11 @@ export class TrackController {
         return this.trackService.getArtistsSortedTracks(req.user.id, sort)
     }
 
+    @Get('artist/single/search')
+    searchArtistSingles(@Request() req, @Query('name') name: string) {
+        return this.trackService.searchArtistSingles(req.user.id, name)
+    }
+
     @Get(':id/current')
     getTrackById(@Param('id') tId: ObjectId) {
         return this.trackService.getTrackById(tId)

@@ -50,15 +50,15 @@ export class TrackService {
 
         let tracks
 
-        if(sort === 'listens') {
+        if (sort === 'listens') {
             tracks = await this.trackModel.find({
                 artist: uId
             }).sort({listens: -1}).populate('album')
-        } else if(sort === 'favorites') {
+        } else if (sort === 'favorites') {
             tracks = await this.trackModel.find({
                 artist: uId
             }).sort({favorites: -1}).populate('album')
-        } else if(sort === 'comment') {
+        } else if (sort === 'comment') {
             tracks = await this.trackModel.find({
                 artist: uId
             }).sort({commentCount: -1}).populate('album')
@@ -74,7 +74,7 @@ export class TrackService {
         return tracks
     }
 
-    async searchArtistsTrack(uId: ObjectId, name): Promise<Track[]> {
+    async searchArtistsTrack(uId: ObjectId, name: string): Promise<Track[]> {
 
         const tracks = await this.trackModel.find({
             artist: uId,
@@ -82,6 +82,17 @@ export class TrackService {
         }).populate('album')
 
         return tracks
+    }
+
+    async searchArtistSingles(uId: ObjectId, name: string): Promise<Track[]> {
+
+        const singles = await this.trackModel.find({
+            artist: uId,
+            protectedDeletion: false,
+            name: {$regex: new RegExp(name, 'i')}
+        }).populate('album')
+
+        return singles
     }
 
     async getTracksByGenre(gId: ObjectId): Promise<Track[]> {
@@ -133,7 +144,7 @@ export class TrackService {
             })
             await user.updateOne({$addToSet: {tracks: track._id}})
 
-            for(let gId of dto.genres) {
+            for (let gId of dto.genres) {
                 const genre = await this.genreModel.findById(gId)
 
                 await track.updateOne({$addToSet: {genre: gId}})
@@ -226,7 +237,7 @@ export class TrackService {
 
         try {
             if (!track.protectedDeletion && newOwner._id !== trackOwner._id) {
-                if(newOwner.roles.findIndex(role => role.role === 'artist') !== -1) {
+                if (newOwner.roles.findIndex(role => role.role === 'artist') !== -1) {
                     this.fileService.moveFile(track.audio, 'audio', 'track', trackOwner.username, newOwner.username)
                     this.fileService.moveFile(track.image, 'image', 'track', trackOwner.username, newOwner.username)
 
@@ -235,7 +246,7 @@ export class TrackService {
                     await newOwner.updateOne({$addToSet: {tracks: track._id}})
 
                     return 'Artist successfully updated'
-                }else {
+                } else {
                     throw new HttpException('Current user is not an artist', HttpStatus.BAD_REQUEST)
                 }
             } else {
@@ -301,7 +312,10 @@ export class TrackService {
         try {
             if (user['id'] === comment.user['id'] || user.roles.find(role => role.role === 'admin')) {
                 await user.updateOne({$pull: {comments: comment['id']}})
-                await this.trackModel.findByIdAndUpdate(comment.track['id'], {$pull: {comments: comment['id']}, $inc: {commentCount: -1}})
+                await this.trackModel.findByIdAndUpdate(comment.track['id'], {
+                    $pull: {comments: comment['id']},
+                    $inc: {commentCount: -1}
+                })
 
                 comment.deleteOne()
 
