@@ -7,6 +7,8 @@ import {User, UserDocument} from "../user/schema/user.schema";
 import {Track, TrackDocument} from "../track/schema/track.schema";
 import {GenreService} from "../genre/genre.service";
 import {Genre, GenreDocument} from "../genre/schema/genre.schema";
+import {editPlaylistDto} from "./dto/edit.playlist.dto";
+import {createPlaylistDto} from "./dto/create.playlist.dto";
 
 @Injectable()
 export class PlaylistService {
@@ -55,6 +57,13 @@ export class PlaylistService {
         return playlists
     }
 
+    async getUsersPlaylists(uId: ObjectId): Promise<Playlist[]> {
+
+        const playlists = await this.playlistModel.find({user: uId})
+
+        return playlists
+    }
+
     async searchPlaylistByName(name: string): Promise<Playlist[]> {
 
         const playlists = await this.playlistModel.find({
@@ -64,20 +73,27 @@ export class PlaylistService {
         return playlists
     }
 
-    async createPlaylist(uId, name, description, image): Promise<Playlist> {
+    async createPlaylist(uId: ObjectId, dto: createPlaylistDto, image): Promise<Playlist> {
 
         try {
             const user = await this.userModel.findById(uId)
-            const pName = [user.username, name]
+            const pName = [user.username, dto.name]
             const imagePath = this.fileService.createFile(FileType.IMAGE, image, 'playlist', user.username)
             const playlist = await this.playlistModel.create({
                 name: pName,
-                description: description,
+                description: dto.description,
                 user: user._id,
                 favorites: 0,
                 image: imagePath,
                 createdTime: Date.now()
             })
+
+            for(let gId of dto.genres) {
+                const genre = await this.genreModel.findById(gId)
+
+                await playlist.updateOne({$addToSet: {genre: gId}})
+                await genre.updateOne({$addToSet: {playlists: playlist._id}})
+            }
 
             await user.updateOne({$push: {playlists: playlist._id}})
 
@@ -98,6 +114,47 @@ export class PlaylistService {
 
         await this.playlistCollectionControl(uId, pId, true)
         return 'Playlist add into your collection successfully'
+    }
+
+    async editPlaylistDescription(uId: ObjectId, pId: ObjectId, dto: editPlaylistDto): Promise<any> {
+
+        const playlist = await this.playlistModel.findById(pId)
+
+        try {
+            if(playlist.user.toString() === uId.toString()) {
+                if(dto.name) {
+                    await playlist.updateOne({$set: {name: dto.name}})
+                }
+
+                if(dto.description) {
+                    await playlist.updateOne({$set: {description: dto.description}})
+                }
+
+                return "Changes update successfully"
+            } else {
+                throw new HttpException(`It's not your playlist`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw this.playlistException(e)
+        }
+    }
+
+    async editPlaylistImage(uId: ObjectId, pId: ObjectId, image): Promise<any> {
+
+        const playlist = await this.playlistModel.findById(pId).populate('user')
+
+        try {
+            if(playlist.user._id.toString() === uId.toString()) {
+                const imageFile = this.fileService.updateFile(playlist.image, image, FileType.IMAGE, 'playlist', playlist.user.username)
+                await playlist.updateOne({$set: {image: imageFile}})
+
+                return 'Image update successfully'
+            } else {
+                throw new HttpException(`It's not your playlist`, HttpStatus.BAD_REQUEST)
+            }
+        } catch (e) {
+            throw this.playlistException(e)
+        }
     }
 
     async removeGenre(uId: ObjectId, pId: ObjectId, gId: ObjectId): Promise<any> {

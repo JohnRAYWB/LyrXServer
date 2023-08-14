@@ -3,7 +3,7 @@ import {
     Controller,
     Delete,
     Get,
-    Param,
+    Param, Patch,
     Post,
     Query,
     Request,
@@ -13,6 +13,8 @@ import {
 import {PlaylistService} from "./playlist.service";
 import {ObjectId} from "mongoose";
 import {FileInterceptor} from "@nestjs/platform-express";
+import {createPlaylistDto} from "./dto/create.playlist.dto";
+import {editPlaylistDto} from "./dto/edit.playlist.dto";
 
 @Controller('playlists')
 export class PlaylistController {
@@ -41,6 +43,11 @@ export class PlaylistController {
         return this.playlistService.getPlaylistsByGenre(gId)
     }
 
+    @Get('user')
+    getUsersPlaylists(@Request() req) {
+        return this.playlistService.getUsersPlaylists(req.user.id)
+    }
+
     @Get('/search')
     searchPlaylistByName(@Query('name') name: string) {
         return this.playlistService.searchPlaylistByName(name)
@@ -48,8 +55,9 @@ export class PlaylistController {
 
     @Post()
     @UseInterceptors(FileInterceptor('image'))
-    createPlaylist(@Request() req, @UploadedFile() image, @Body('name') name: string, @Body('description') description: string) {
-        return this.playlistService.createPlaylist(req.user.id, name, description, image)
+    createPlaylist(@Request() req, @Body() dto: createPlaylistDto, @UploadedFile() image, ) {
+        const genres = [].concat(dto.genres)
+        return this.playlistService.createPlaylist(req.user.id, {...dto, genres: genres}, image)
     }
 
     @Post('genre/:id/add')
@@ -60,6 +68,17 @@ export class PlaylistController {
     @Post('collection/:id/add')
     addPlaylistToCollection(@Request() req, @Param('id') pId: ObjectId) {
         return this.playlistService.addPlaylistToCollection(req.user.id, pId)
+    }
+
+    @Patch('edit/:id/description')
+    editPlaylistDescription(@Request() req, @Param('id') pId: ObjectId, @Body() dto: editPlaylistDto) {
+        return this.playlistService.editPlaylistDescription(req.user.id, pId, dto)
+    }
+
+    @Patch('edit/:id/image')
+    @UseInterceptors(FileInterceptor('image'))
+    editPlaylistImage(@Request() req, @Param('id') pId: ObjectId, @UploadedFile() image) {
+        return this.playlistService.editPlaylistImage(req.user.id, pId, image)
     }
 
     @Post('genre/:id/remove')
