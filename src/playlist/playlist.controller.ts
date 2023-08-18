@@ -48,7 +48,7 @@ export class PlaylistController {
         return this.playlistService.getUsersPlaylists(req.user.id)
     }
 
-    @Get('/search')
+    @Get('search')
     searchPlaylistByName(@Query('name') name: string) {
         return this.playlistService.searchPlaylistByName(name)
     }
