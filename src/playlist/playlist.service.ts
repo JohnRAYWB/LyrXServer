@@ -67,6 +67,22 @@ export class PlaylistService {
         return playlists
     }
 
+    async getUsersPlaylistsCollection(uId: ObjectId): Promise<Playlist[]> {
+
+        const user = await this.userModel.findById(uId).populate('playlistsCollection')
+        const playlistsCollection = []
+
+        for(let uPlaylist of user.playlistsCollection) {
+            const playlist = await this.playlistModel.findById(uPlaylist._id).populate([
+                {path: 'tracks', populate: 'album'},
+                {path: 'genre'}
+            ])
+
+            playlistsCollection.push(playlist)
+        }
+        return playlistsCollection
+    }
+
     async searchPlaylistByName(name: string): Promise<Playlist[]> {
 
         const playlists = await this.playlistModel.find({
