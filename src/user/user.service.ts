@@ -45,7 +45,7 @@ export class UserService {
                 {path: 'followings', populate: 'roles', select: '-password'},
                 {path: 'tracks', populate: 'album'},
                 {path: 'tracksCollection', populate: 'album'},
-                {path: 'playlists'},
+                {path: 'playlists', populate: 'tracks'},
                 {path: 'playlistsCollection'},
                 {path: 'albums'},
                 {path: 'albumsCollection'},
