@@ -43,7 +43,7 @@ export class AlbumService {
 
     async getMostLiked() {
 
-        const albums = await this.albumModel.find().sort({favorites: -1}).limit(10)
+        const albums = await this.albumModel.find().sort({favorites: -1}).limit(10).populate('tracks')
 
         return albums
     }

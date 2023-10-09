@@ -4,7 +4,6 @@ import {User, UserDocument} from "./schema/user.schema";
 import {Model, ObjectId} from "mongoose";
 import {RoleService} from "../role/role.service";
 import {createUserDto} from "./dto/create.user.dto";
-import {birthDto} from "./dto/birth.dto";
 import {FileService, FileType} from "../file/file.service";
 
 @Injectable()
@@ -46,9 +45,9 @@ export class UserService {
                 {path: 'tracks', populate: 'album'},
                 {path: 'tracksCollection', populate: 'album'},
                 {path: 'playlists', populate: 'tracks'},
-                {path: 'playlistsCollection'},
-                {path: 'albums'},
-                {path: 'albumsCollection'},
+                {path: 'playlistsCollection', populate: 'tracks'},
+                {path: 'albums', populate: 'tracks'},
+                {path: 'albumsCollection', populate: 'tracks'},
                 {path: 'roles'},
             ]).select('-password')
 
@@ -115,17 +114,6 @@ export class UserService {
         await user.updateOne({$set: {avatar: filePath}})
 
         return 'Your avatar changed successfully'
-    }
-
-    async addBirth(uId: ObjectId, dto: birthDto): Promise<any> {
-
-        try {
-            await this.userModel.findByIdAndUpdate(uId, {$set: {birth: dto.birth}})
-
-            return 'Your bDay update successfully'
-        } catch (e) {
-            throw this.userException(e)
-        }
     }
 
     async addRole(uId: ObjectId, rName: string): Promise<any> {

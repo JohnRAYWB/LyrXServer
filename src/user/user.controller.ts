@@ -1,7 +1,6 @@
 import {Body, Controller, Get, Param, Post, Query, Request, UploadedFile, UseInterceptors} from "@nestjs/common";
 import {UserService} from "./user.service";
 import {Roles} from "../role/role.guard";
-import {birthDto} from "./dto/birth.dto";
 import {FileInterceptor} from "@nestjs/platform-express";
 import {ObjectId} from "mongoose";
 
@@ -44,11 +43,6 @@ export class UserController {
     @UseInterceptors(FileInterceptor('avatar'))
     addAvatar(@Request() req, @UploadedFile() avatar) {
         return this.userService.addAvatar(req.user.id, avatar)
-    }
-
-    @Post('profile/birth')
-    addBirth(@Request() req, @Body() dto: birthDto) {
-        return this.userService.addBirth(req.user.id, dto)
     }
 
     @Roles('admin')

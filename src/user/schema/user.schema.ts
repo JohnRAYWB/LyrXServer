@@ -32,9 +32,6 @@ export class User {
     @Prop()
     avatar: string
 
-    @Prop({type: Date})
-    birth: Date
-
     @Prop()
     ban: boolean
 
