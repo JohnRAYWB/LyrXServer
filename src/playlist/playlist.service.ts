@@ -87,7 +87,7 @@ export class PlaylistService {
 
         const playlists = await this.playlistModel.find({
             name: {$regex: new RegExp(name, 'i')}
-        })
+        }).populate('tracks')
 
         return playlists
     }

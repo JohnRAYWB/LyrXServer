@@ -71,7 +71,7 @@ export class AlbumService {
         const albums = await this.albumModel.find({
             artist: uId,
             name: {$regex: new RegExp(name, 'i')}
-        })
+        }).populate('tracks')
 
         return albums
     }
