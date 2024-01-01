@@ -20,8 +20,7 @@ export class UserService {
 
     async getAllUsers(limit = 10, page = 0): Promise<User[]> {
 
-        const usersList = await this.userModel
-            .find()
+        const usersList = await this.userModel.find().populate([{path: 'roles'}, {path: 'comments'}])
             .skip(page)
             .limit(limit)
             .select('-password')
@@ -54,16 +53,14 @@ export class UserService {
         return user
     }
 
-    async searchUserByName(username: string, limit = 10, page = 0): Promise<User[]> {
+    async searchUserByName(username: string): Promise<User[]> {
 
         const userList = await this.userModel.find({
             username: {$regex: new RegExp(username, 'i')}
         }).populate([
             {path: 'roles'},
             {path: 'comments'}
-        ]).skip(page)
-            .limit(limit)
-            .select('-password')
+        ]).select('-password')
 
         return userList
     }

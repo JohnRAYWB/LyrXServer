@@ -25,8 +25,8 @@ export class UserController {
     }
 
     @Get('search')
-    searchUserByName(@Query('username') username: string, @Query('limit') limit: number, @Query('page') page: number) {
-        return this.userService.searchUserByName(username, limit, page)
+    searchUserByName(@Query('username') username: string) {
+        return this.userService.searchUserByName(username)
     }
 
     @Get('artists/search')
