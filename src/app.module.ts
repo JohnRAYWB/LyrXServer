@@ -14,7 +14,7 @@ import {GenreModule} from "./genre/genre.module";
 @Module({
   imports: [
       ServeStaticModule.forRoot({rootPath: path.resolve(__dirname, 'static')}),
-      MongooseModule.forRoot('mongodb+srv://JohnRAY:secret_key@lyrx.pnxrszk.mongodb.net/LyrXEntities?retryWrites=true&w=majority'),
+      MongooseModule.forRoot('your/mongoDB/link/to/database'),
       UserModule,
       RoleModule,
       AuthModule,
